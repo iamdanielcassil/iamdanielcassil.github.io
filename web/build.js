@@ -64880,9 +64880,9 @@ module.exports = function(module) {
 
 /***/ }),
 
-/***/ "./src/components/list.js":
+/***/ "./src/components/card.js":
 /*!********************************!*\
-  !*** ./src/components/list.js ***!
+  !*** ./src/components/card.js ***!
   \********************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
@@ -64905,19 +64905,13 @@ var styles = function styles(theme) {
 };
 
 function makeListItem(data) {
-  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["List"].Item, {
+  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"], {
     key: data.id
-  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["List"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["List"].Header, null, data.name), data.details));
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, data.name), data.details));
 }
 
 function list(props) {
-  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["List"], {
-    celled: true
-  }, props.listA.map(function (d) {
-    return makeListItem(d);
-  })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["List"], {
-    celled: true
-  }, props.listB.map(function (d) {
+  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Group, null, props.data.map(function (d) {
     return makeListItem(d);
   })));
 }
@@ -64940,7 +64934,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! semantic-ui-react */ "./node_modules/semantic-ui-react/dist/es/index.js");
-/* harmony import */ var _components_list__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./components/list */ "./src/components/list.js");
+/* harmony import */ var _components_card__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./components/card */ "./src/components/card.js");
 /* harmony import */ var sequence_transactor__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! sequence-transactor */ "./node_modules/sequence-transactor/src/transactor.js");
 /* harmony import */ var sequence_transactor__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(sequence_transactor__WEBPACK_IMPORTED_MODULE_4__);
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -64994,10 +64988,21 @@ function (_Component) {
       id: 4,
       name: 'dan',
       details: 'bob is cool'
-    }], _this.transactor = sequence_transactor__WEBPACK_IMPORTED_MODULE_4___default.a.create();
+    }];
+    _this.data2 = [{
+      id: 5,
+      name: 'james',
+      details: 'bob is cool'
+    }, {
+      id: 6,
+      name: 'steve',
+      details: 'bob is cool'
+    }];
+    _this.transactor = sequence_transactor__WEBPACK_IMPORTED_MODULE_4___default.a.create();
     _this.state = {
       listA: _this.data,
-      listB: []
+      listB: [],
+      listC: _this.data2
     };
     _this.onClickAdd = _this.onClickAdd.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onClickUndo = _this.onClickUndo.bind(_assertThisInitialized(_assertThisInitialized(_this)));
@@ -65009,6 +65014,11 @@ function (_Component) {
     key: "onClickAdd",
     value: function onClickAdd() {
       var listA = this.state.listA;
+
+      if (listA.length === 0) {
+        return;
+      }
+
       var next = listA.slice().pop();
       this.transactor.add(next.id, next);
       this.updateAfter();
@@ -65030,35 +65040,63 @@ function (_Component) {
     value: function updateAfter() {
       var listA = this.data;
       var listB = this.transactor.get();
+      var listC = this.data2;
       listA = listA.filter(function (li) {
         return !listB.some(function (lib) {
           return lib.id === li.id;
         });
       });
+      listC = listC.filter(function (li) {
+        return !listB.some(function (lib) {
+          return lib.id === li.id;
+        });
+      }).concat(listB);
       this.setState({
         listB: listB,
-        listA: listA
+        listA: listA,
+        listC: listC
       });
     }
   }, {
     key: "render",
     value: function render() {
-      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_list__WEBPACK_IMPORTED_MODULE_3__["default"], {
-        listA: this.state.listA,
-        listB: this.state.listB
-      }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
+      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"], {
+        container: true,
+        columns: 3
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+        key: "1"
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
         variant: "raised",
         color: "blue",
         onClick: this.onClickAdd
-      }, "Add Transaction"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
+      }, "Add Transaction")), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+        key: "2"
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
         variant: "raised",
         color: "blue",
         onClick: this.onClickUndo
-      }, "Undo"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
+      }, "Undo")), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+        key: "3"
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
         variant: "raised",
         color: "blue",
         onClick: this.onClickRedo
-      }, "Redo"));
+      }, "Redo"))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"], {
+        container: true,
+        columns: 3
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+        key: "1"
+      }, "Data Set 1", react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_card__WEBPACK_IMPORTED_MODULE_3__["default"], {
+        data: this.state.listA
+      })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+        key: "2"
+      }, "Transactions", react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_card__WEBPACK_IMPORTED_MODULE_3__["default"], {
+        data: this.state.listB
+      })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+        key: "3"
+      }, "Data Set 2 with Transactions superimposed", react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_card__WEBPACK_IMPORTED_MODULE_3__["default"], {
+        data: this.state.listC
+      }))));
     }
   }]);
 

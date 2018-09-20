@@ -1,5 +1,5 @@
 import React from 'react';
-import { List } from 'semantic-ui-react'
+import { Card } from 'semantic-ui-react'
  
 const styles = theme => ({
   root: {
@@ -10,21 +10,21 @@ const styles = theme => ({
 
 function makeListItem(data) {
 	return (
-		<List.Item key={data.id}>
-			<List.Content>
-				<List.Header>{data.name}</List.Header>
+		<Card key={data.id}>
+			<Card.Content>
+				<Card.Header>{data.name}</Card.Header>
 				{data.details}
-			</List.Content>
-		</List.Item>
+			</Card.Content>
+		</Card>
 	);
 }
 
 function list(props) {
   return (
 		<div>
-			<List celled>
+			<Card.Group>
 				{props.data.map(d => makeListItem(d))}
-			</List>
+			</Card.Group>
 		</div>
 	);
 }
