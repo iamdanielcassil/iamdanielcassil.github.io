@@ -1,0 +1,30 @@
+{
+  "name": "iamdanielcassil.github.io",
+  "version": "1.0.0",
+  "description": "a site",
+  "repository": {
+    "type": "github",
+    "url": "https://github.com/iamdanielcassil/iamdanielcassil.github.io"
+  },
+  "main": ".src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --watch --mode development"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2",
+    "semantic-ui-react": "^0.82.5",
+    "sequence-transactor": "^1.0.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.1.0",
+    "@babel/preset-env": "^7.1.0",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.2",
+    "webpack": "^4.19.1",
+    "webpack-cli": "^3.1.0"
+  }
+}
