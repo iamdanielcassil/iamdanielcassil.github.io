@@ -1,6 +1,11 @@
 import React, { Component } from 'react';
 import { Card, Menu, Input } from 'semantic-ui-react'
 
+/**
+ * This demo site was quickly thrown together, please forgive the code mess.
+ * @author Daniel Cassil
+ */
+
 const styles = theme => ({
   root: {
     textAlign: 'center',

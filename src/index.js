@@ -1,8 +1,13 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Button, Grid, Input, Icon, Card, Menu } from 'semantic-ui-react'
+import { Button, Grid, Input, Transition, Card, Menu } from 'semantic-ui-react'
 import TList from './components/card';
 import Transactor from 'sequence-transactor';
+
+/**
+ * This demo site was quickly thrown together, please forgive the code mess.
+ * @author Daniel Cassil
+ */
  
 class App extends Component {
 
@@ -29,6 +34,9 @@ class App extends Component {
     this.onClickCancel = this.onClickCancel.bind(this);
   }
   
+  /**
+   * add transaction click handler
+   */
   onClickAdd() {
     let data = {
       id: this.nextId++,
@@ -42,23 +50,35 @@ class App extends Component {
     });
   }
 
+  /**
+   * undo last transaction click handler
+   */
   onClickUndo() {
     this.transactor.back();
     this.forceUpdate();
   }
 
+  /**
+   * redo last undone transaction click handler
+   */
   onClickRedo() {
     this.transactor.forward();
     this.forceUpdate();
   }
 
+  /**
+   * cancel and clear transactions click handler
+   */
   onClickCancel() {
     this.transactor.clear();
     this.forceUpdate();
   }
 
+  /**
+   * save transactions click handler
+   */
   onClickSave() {
-    this.transactor.save((data) => {
+    let saveFunction = (data) => {
       data.forEach(d => {
         let index = this.data2.findIndex(d2 => d2.id === d.id);
 
@@ -71,22 +91,55 @@ class App extends Component {
         }
       });
       return Promise.resolve();
-    }).then(() => {
+    }
+
+    this.transactor.save(saveFunction).then(() => {
       this.transactor.clear();
       this.forceUpdate();
     })
   }
 
+  // Example of uising transactor.saveEach
+  // onClickSaveEach() {
+  //   let saveFunction = (data) => {
+  //     let index = this.data2.findIndex(d2 => d2.id === data.id);
+
+  //       if (index === -1) {
+  //         console.log('saved transaction data as new item to dataset2', data);
+  //         this.data2.push(data);
+  //       } else {
+  //         console.log('saved transaction data as update to dataset2', data);
+  //         this.data2[index] = data;
+  //     }
+  //     return Promise.resolve();
+  //   }
+
+  //   this.transactor.saveEach(saveFunction).then(() => {
+  //     this.transactor.clear();
+  //     this.forceUpdate();
+  //   })
+  // }
+
+  /**
+   * editable data item change handler
+   * @param {Event} e 
+   */
   onInputChange(e) {
     this.setState({
       inputValue: e.target.value
     });
   }
 
-  getListB() {
+  /**
+   * get transactions from transactor
+   */
+  getTransactions() {
     return this.transactor.get();
   }
 
+  /**
+   * get list c, data + transactions
+   */
   getListC() {
     let transactions = this.transactor.getLatest();
     let listC =  this.data2.slice();
@@ -104,26 +157,36 @@ class App extends Component {
     return listC;
   }
 
+  /**
+   * update editable field save click handler
+   * @param {*} data 
+   */
   updateDataItem(data) {
     this.transactor.add(data.id, data);
     this.forceUpdate();
   }
 
   render() {
-    let listB = this.getListB();
+    let listB = this.getTransactions();
     let listC = this.getListC();
     let saveCancelMenu = (
       <Menu.Menu position="right">
-        <Menu.Item>
-          <Button variant="raised" color="grey" onClick={this.onClickCancel}>
+        <Menu.Item fitted="vertically">
+          <Button size="massive" secondary color="grey" onClick={this.onClickCancel}>
             Cancel
           </Button>
         </Menu.Item>
         <Menu.Item>
-          <Button variant="raised" color="blue" onClick={this.onClickSave}>
+          <Button color="blue" size="mini" onClick={this.onClickSave}>
             Save
           </Button>
         </Menu.Item>
+      </Menu.Menu>
+    );
+    let undoMenu = (
+      <Menu.Menu position="left">
+        <Menu.Item fitted="vertically" icon='undo' color="grey" onClick={this.onClickUndo}/>
+        <Menu.Item fitted="vertically" icon='redo' color="grey" onClick={this.onClickRedo}/>
       </Menu.Menu>
     )
 
@@ -131,12 +194,9 @@ class App extends Component {
       <div style={{ margin: 20 }}>
         <Grid container columns={3} divided>
           <Grid.Row>
-            <Menu inverted fixed="top">
-              <Menu.Item icon='undo' color="grey" onClick={this.onClickUndo}/>
-              <Menu.Item icon='redo' color="grey" onClick={this.onClickRedo}/>
-              
-                {listB.length > 0 ? saveCancelMenu : ''}
-              
+            <Menu borderless secondary fluid>
+              {listB.length > 0 ? undoMenu : ''}
+              {listB.length > 0 ? saveCancelMenu : ''}
             </Menu>
           </Grid.Row>
           <Grid.Column style={{ minHeight: 600 }} key="1">

@@ -64913,6 +64913,10 @@ function _assertThisInitialized(self) { if (self === void 0) { throw new Referen
 
 
 
+/**
+ * This demo site was quickly thrown together, please forgive the code mess.
+ * @author Daniel Cassil
+ */
 
 var styles = function styles(theme) {
   return {
@@ -65061,6 +65065,10 @@ function _assertThisInitialized(self) { if (self === void 0) { throw new Referen
 
 
 
+/**
+ * This demo site was quickly thrown together, please forgive the code mess.
+ * @author Daniel Cassil
+ */
 
 var App =
 /*#__PURE__*/
@@ -65094,6 +65102,10 @@ function (_Component) {
     _this.onClickCancel = _this.onClickCancel.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     return _this;
   }
+  /**
+   * add transaction click handler
+   */
+
 
   _createClass(App, [{
     key: "onClickAdd",
@@ -65108,30 +65120,46 @@ function (_Component) {
         inputValue: ''
       });
     }
+    /**
+     * undo last transaction click handler
+     */
+
   }, {
     key: "onClickUndo",
     value: function onClickUndo() {
       this.transactor.back();
       this.forceUpdate();
     }
+    /**
+     * redo last undone transaction click handler
+     */
+
   }, {
     key: "onClickRedo",
     value: function onClickRedo() {
       this.transactor.forward();
       this.forceUpdate();
     }
+    /**
+     * cancel and clear transactions click handler
+     */
+
   }, {
     key: "onClickCancel",
     value: function onClickCancel() {
       this.transactor.clear();
       this.forceUpdate();
     }
+    /**
+     * save transactions click handler
+     */
+
   }, {
     key: "onClickSave",
     value: function onClickSave() {
       var _this2 = this;
 
-      this.transactor.save(function (data) {
+      var saveFunction = function saveFunction(data) {
         data.forEach(function (d) {
           var index = _this2.data2.findIndex(function (d2) {
             return d2.id === d.id;
@@ -65147,12 +65175,37 @@ function (_Component) {
           }
         });
         return Promise.resolve();
-      }).then(function () {
+      };
+
+      this.transactor.save(saveFunction).then(function () {
         _this2.transactor.clear();
 
         _this2.forceUpdate();
       });
-    }
+    } // Example of uising transactor.saveEach
+    // onClickSaveEach() {
+    //   let saveFunction = (data) => {
+    //     let index = this.data2.findIndex(d2 => d2.id === data.id);
+    //       if (index === -1) {
+    //         console.log('saved transaction data as new item to dataset2', data);
+    //         this.data2.push(data);
+    //       } else {
+    //         console.log('saved transaction data as update to dataset2', data);
+    //         this.data2[index] = data;
+    //     }
+    //     return Promise.resolve();
+    //   }
+    //   this.transactor.saveEach(saveFunction).then(() => {
+    //     this.transactor.clear();
+    //     this.forceUpdate();
+    //   })
+    // }
+
+    /**
+     * editable data item change handler
+     * @param {Event} e 
+     */
+
   }, {
     key: "onInputChange",
     value: function onInputChange(e) {
@@ -65160,11 +65213,19 @@ function (_Component) {
         inputValue: e.target.value
       });
     }
+    /**
+     * get transactions from transactor
+     */
+
   }, {
-    key: "getListB",
-    value: function getListB() {
+    key: "getTransactions",
+    value: function getTransactions() {
       return this.transactor.get();
     }
+    /**
+     * get list c, data + transactions
+     */
+
   }, {
     key: "getListC",
     value: function getListC() {
@@ -65183,6 +65244,11 @@ function (_Component) {
       });
       return listC;
     }
+    /**
+     * update editable field save click handler
+     * @param {*} data 
+     */
+
   }, {
     key: "updateDataItem",
     value: function updateDataItem(data) {
@@ -65192,19 +65258,35 @@ function (_Component) {
   }, {
     key: "render",
     value: function render() {
-      var listB = this.getListB();
+      var listB = this.getTransactions();
       var listC = this.getListC();
       var saveCancelMenu = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Menu, {
         position: "right"
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Item, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
-        variant: "raised",
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Item, {
+        fitted: "vertically"
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
+        size: "massive",
+        secondary: true,
         color: "grey",
         onClick: this.onClickCancel
       }, "Cancel")), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Item, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
-        variant: "raised",
         color: "blue",
+        size: "mini",
         onClick: this.onClickSave
       }, "Save")));
+      var undoMenu = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Menu, {
+        position: "left"
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Item, {
+        fitted: "vertically",
+        icon: "undo",
+        color: "grey",
+        onClick: this.onClickUndo
+      }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Item, {
+        fitted: "vertically",
+        icon: "redo",
+        color: "grey",
+        onClick: this.onClickRedo
+      }));
       return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
         style: {
           margin: 20
@@ -65214,17 +65296,10 @@ function (_Component) {
         columns: 3,
         divided: true
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Row, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"], {
-        inverted: true,
-        fixed: "top"
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Item, {
-        icon: "undo",
-        color: "grey",
-        onClick: this.onClickUndo
-      }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Item, {
-        icon: "redo",
-        color: "grey",
-        onClick: this.onClickRedo
-      }), listB.length > 0 ? saveCancelMenu : '')), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+        borderless: true,
+        secondary: true,
+        fluid: true
+      }, listB.length > 0 ? undoMenu : '', listB.length > 0 ? saveCancelMenu : '')), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         style: {
           minHeight: 600
         },
