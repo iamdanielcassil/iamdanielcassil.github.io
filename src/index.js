@@ -192,8 +192,10 @@ class App extends Component {
 
     return (
       <div style={{ margin: 20 }}>
-      <Image src="icon.png"/>
         <Grid container columns={3} divided>
+        <Grid.Row centered textAlign="center">
+        <div><Image src="icon.png" size="tiny"/></div>
+        </Grid.Row>
           <Grid.Row>
             <Menu borderless secondary fluid>
               {undoMenu}
