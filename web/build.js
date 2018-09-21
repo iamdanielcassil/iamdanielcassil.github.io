@@ -64889,9 +64889,28 @@ module.exports = function(module) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return DataList; });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! semantic-ui-react */ "./node_modules/semantic-ui-react/dist/es/index.js");
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
 
 
 
@@ -64904,19 +64923,101 @@ var styles = function styles(theme) {
   };
 };
 
-function makeListItem(data) {
-  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"], {
-    key: data.id
-  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, data.name)));
-}
+var DataList =
+/*#__PURE__*/
+function (_Component) {
+  _inherits(DataList, _Component);
 
-function list(props) {
-  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Group, null, props.data.map(function (d) {
-    return makeListItem(d);
-  })));
-}
+  function DataList(props) {
+    var _this;
 
-/* harmony default export */ __webpack_exports__["default"] = (list);
+    _classCallCheck(this, DataList);
+
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(DataList).call(this, props));
+    _this.state = {};
+    _this.edit = _this.edit.bind(_assertThisInitialized(_assertThisInitialized(_this)));
+    _this.onChange = _this.onChange.bind(_assertThisInitialized(_assertThisInitialized(_this)));
+    _this.save = _this.save.bind(_assertThisInitialized(_assertThisInitialized(_this)));
+    _this.makeListItem = _this.makeListItem.bind(_assertThisInitialized(_assertThisInitialized(_this)));
+    return _this;
+  }
+
+  _createClass(DataList, [{
+    key: "edit",
+    value: function edit(data) {
+      this.setState({
+        itemBeingEdited: data
+      });
+    }
+  }, {
+    key: "save",
+    value: function save() {
+      this.props.updateDataItem(this.state.itemBeingEdited);
+      this.setState({
+        itemBeingEdited: undefined
+      });
+    }
+  }, {
+    key: "onChange",
+    value: function onChange(e) {
+      var itemBeingEdited = {
+        id: this.state.itemBeingEdited.id,
+        name: e.target.value
+      };
+      this.setState({
+        itemBeingEdited: itemBeingEdited
+      });
+    }
+  }, {
+    key: "makeListItem",
+    value: function makeListItem(data, index) {
+      var _this2 = this;
+
+      var itemBeingEdited = this.state.itemBeingEdited;
+      var editMenu = null;
+      var isBeingEdited = itemBeingEdited && data.id === itemBeingEdited.id;
+      var content = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, data.name);
+
+      if (this.props.editable) {
+        if (isBeingEdited) {
+          content = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Input"], {
+            value: itemBeingEdited.name,
+            onChange: this.onChange
+          });
+          editMenu = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Menu"], {
+            compact: true
+          }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Menu"].Item, {
+            icon: "check",
+            onClick: this.save
+          }));
+        } else {
+          editMenu = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Menu"], {
+            compact: true
+          }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Menu"].Item, {
+            icon: "edit",
+            onClick: function onClick() {
+              return _this2.edit(data);
+            }
+          }));
+        }
+      }
+
+      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"], {
+        fluid: true,
+        key: index
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, editMenu, content));
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Group, null, this.props.data.map(this.makeListItem)));
+    }
+  }]);
+
+  return DataList;
+}(react__WEBPACK_IMPORTED_MODULE_0__["Component"]);
+
+
 
 /***/ }),
 
@@ -64989,6 +65090,8 @@ function (_Component) {
     _this.onClickRedo = _this.onClickRedo.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onClickSave = _this.onClickSave.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onInputChange = _this.onInputChange.bind(_assertThisInitialized(_assertThisInitialized(_this)));
+    _this.updateDataItem = _this.updateDataItem.bind(_assertThisInitialized(_assertThisInitialized(_this)));
+    _this.onClickCancel = _this.onClickCancel.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     return _this;
   }
 
@@ -65018,15 +65121,30 @@ function (_Component) {
       this.forceUpdate();
     }
   }, {
+    key: "onClickCancel",
+    value: function onClickCancel() {
+      this.transactor.clear();
+      this.forceUpdate();
+    }
+  }, {
     key: "onClickSave",
     value: function onClickSave() {
       var _this2 = this;
 
       this.transactor.save(function (data) {
         data.forEach(function (d) {
-          console.log('saved transaction data to dataset 2', d);
+          var index = _this2.data2.findIndex(function (d2) {
+            return d2.id === d.id;
+          });
 
-          _this2.data2.push(d);
+          if (index === -1) {
+            console.log('saved transaction data as new item to dataset2', d);
+
+            _this2.data2.push(d);
+          } else {
+            console.log('saved transaction data as update to dataset2', d);
+            _this2.data2[index] = d;
+          }
         });
         return Promise.resolve();
       }).then(function () {
@@ -65050,60 +65168,117 @@ function (_Component) {
   }, {
     key: "getListC",
     value: function getListC() {
-      var listB = this.transactor.get();
-      var listC = this.data2;
-      return listC.filter(function (li) {
-        return !listB.some(function (lib) {
-          return lib.id === li.id;
+      var transactions = this.transactor.getLatest();
+      var listC = this.data2.slice();
+      transactions.forEach(function (t) {
+        var index = listC.findIndex(function (d2) {
+          return d2.id === t.id;
         });
-      }).concat(listB);
+
+        if (index === -1) {
+          listC.push(t);
+        } else {
+          listC[index] = t;
+        }
+      });
+      return listC;
+    }
+  }, {
+    key: "updateDataItem",
+    value: function updateDataItem(data) {
+      this.transactor.add(data.id, data);
+      this.forceUpdate();
     }
   }, {
     key: "render",
     value: function render() {
       var listB = this.getListB();
       var listC = this.getListC();
+      var saveCancelMenu = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Menu, {
+        position: "right"
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Item, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
+        variant: "raised",
+        color: "grey",
+        onClick: this.onClickCancel
+      }, "Cancel")), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Item, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
+        variant: "raised",
+        color: "blue",
+        onClick: this.onClickSave
+      }, "Save")));
       return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
         style: {
           margin: 20
         }
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"], {
         container: true,
-        columns: 3
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+        columns: 3,
+        divided: true
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Row, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"], {
+        inverted: true,
+        fixed: "top"
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Item, {
+        icon: "undo",
+        color: "grey",
+        onClick: this.onClickUndo
+      }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Item, {
+        icon: "redo",
+        color: "grey",
+        onClick: this.onClickRedo
+      }), listB.length > 0 ? saveCancelMenu : '')), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+        style: {
+          minHeight: 600
+        },
         key: "1"
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"], {
+        fluid: true
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Header, {
+        textAlign: "center",
+        style: {
+          paddingTop: 10,
+          paddingBottom: 10
+        }
+      }, "Create New Transaction"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, {
+        textAlign: "center"
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Input"], {
+        fluid: true,
         focus: true,
         value: this.state.inputValue,
         placeholder: "name",
         onChange: this.onInputChange
       }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
+        style: {
+          marginTop: 5
+        },
         variant: "raised",
         color: "green",
         onClick: this.onClickAdd
-      }, "Add Transaction")), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+      }, "Add")))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         key: "2"
-      }, "Transactions", react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_card__WEBPACK_IMPORTED_MODULE_3__["default"], {
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"], {
+        fluid: true
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Header, {
+        textAlign: "center",
+        style: {
+          paddingTop: 10,
+          paddingBottom: 10
+        }
+      }, "Transactions"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_card__WEBPACK_IMPORTED_MODULE_3__["default"], {
         data: listB
-      })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+      })))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         key: "3"
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"].Group, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
-        icon: "undo",
-        color: "grey",
-        onClick: this.onClickUndo
-      }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
-        icon: "redo",
-        color: "grey",
-        onClick: this.onClickRedo
-      }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Icon"], {
-        name: "undo"
-      }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
-        variant: "raised",
-        color: "blue",
-        onClick: this.onClickSave
-      }, "Save")), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, "Data Set 2 with Transactions superimposed"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_card__WEBPACK_IMPORTED_MODULE_3__["default"], {
-        data: listC
-      }))));
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"], {
+        fluid: true
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Header, {
+        textAlign: "center",
+        style: {
+          paddingTop: 10,
+          paddingBottom: 10
+        }
+      }, "Data Set 2 with Transactions superimposed"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_card__WEBPACK_IMPORTED_MODULE_3__["default"], {
+        data: listC,
+        editable: true,
+        updateDataItem: this.updateDataItem
+      }))))));
     }
   }]);
 

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Button, Grid, Input, Icon } from 'semantic-ui-react'
+import { Button, Grid, Input, Icon, Card, Menu } from 'semantic-ui-react'
 import TList from './components/card';
 import Transactor from 'sequence-transactor';
  
@@ -25,6 +25,8 @@ class App extends Component {
     this.onClickRedo = this.onClickRedo.bind(this);
     this.onClickSave = this.onClickSave.bind(this);
     this.onInputChange = this.onInputChange.bind(this);
+    this.updateDataItem = this.updateDataItem.bind(this);
+    this.onClickCancel = this.onClickCancel.bind(this);
   }
   
   onClickAdd() {
@@ -50,11 +52,23 @@ class App extends Component {
     this.forceUpdate();
   }
 
+  onClickCancel() {
+    this.transactor.clear();
+    this.forceUpdate();
+  }
+
   onClickSave() {
     this.transactor.save((data) => {
       data.forEach(d => {
-        console.log('saved transaction data to dataset 2', d);
-        this.data2.push(d);
+        let index = this.data2.findIndex(d2 => d2.id === d.id);
+
+        if (index === -1) {
+          console.log('saved transaction data as new item to dataset2', d);
+          this.data2.push(d);
+        } else {
+          console.log('saved transaction data as update to dataset2', d);
+          this.data2[index] = d;
+        }
       });
       return Promise.resolve();
     }).then(() => {
@@ -74,44 +88,89 @@ class App extends Component {
   }
 
   getListC() {
-    let listB = this.transactor.get();
-    let listC = this.data2;
+    let transactions = this.transactor.getLatest();
+    let listC =  this.data2.slice();
+    
+    transactions.forEach(t => {
+      let index = listC.findIndex(d2 => d2.id === t.id);
 
-    return listC.filter(li => {
-      return !listB.some(lib => {
-        return lib.id === li.id;
-      });
-    }).concat(listB);
+      if (index === -1) {
+        listC.push(t);
+      } else {
+        listC[index] = t;
+      }
+    })
+
+    return listC;
+  }
+
+  updateDataItem(data) {
+    this.transactor.add(data.id, data);
+    this.forceUpdate();
   }
 
   render() {
     let listB = this.getListB();
     let listC = this.getListC();
+    let saveCancelMenu = (
+      <Menu.Menu position="right">
+        <Menu.Item>
+          <Button variant="raised" color="grey" onClick={this.onClickCancel}>
+            Cancel
+          </Button>
+        </Menu.Item>
+        <Menu.Item>
+          <Button variant="raised" color="blue" onClick={this.onClickSave}>
+            Save
+          </Button>
+        </Menu.Item>
+      </Menu.Menu>
+    )
 
     return (
       <div style={{ margin: 20 }}>
-        <Grid container columns={3}>
-          <Grid.Column key="1">
-            <Input focus value={this.state.inputValue} placeholder='name' onChange={this.onInputChange}/>
-            <Button variant="raised" color="green" onClick={this.onClickAdd}>
-              Add Transaction
-            </Button>
+        <Grid container columns={3} divided>
+          <Grid.Row>
+            <Menu inverted fixed="top">
+              <Menu.Item icon='undo' color="grey" onClick={this.onClickUndo}/>
+              <Menu.Item icon='redo' color="grey" onClick={this.onClickRedo}/>
+              
+                {listB.length > 0 ? saveCancelMenu : ''}
+              
+            </Menu>
+          </Grid.Row>
+          <Grid.Column style={{ minHeight: 600 }} key="1">
+            <Card fluid={true}>
+              <Card.Header textAlign="center" style={{ paddingTop: 10, paddingBottom: 10 }}>
+                Create New Transaction
+              </Card.Header>
+              <Card.Content textAlign="center">
+                <Input fluid focus value={this.state.inputValue} placeholder='name' onChange={this.onInputChange}/>
+                <Button style={{ marginTop: 5 }} variant="raised" color="green" onClick={this.onClickAdd}>
+                  Add
+                </Button>
+              </Card.Content>
+            </Card>
           </Grid.Column>
           <Grid.Column key="2">
-            Transactions
-            <TList {...{data: listB}} />
+            <Card fluid={true}>
+              <Card.Header textAlign="center" style={{ paddingTop: 10, paddingBottom: 10 }}>
+                Transactions
+              </Card.Header>
+              <Card.Content>
+                <TList {...{data: listB}} />
+              </Card.Content>
+            </Card>
           </Grid.Column>
           <Grid.Column key="3">
-            <Button.Group>
-              <Button icon='undo' color="grey" onClick={this.onClickUndo}/>
-              <Button icon='redo' color="grey" onClick={this.onClickRedo}/>
-              <Icon name="undo"/>
-              <Button variant="raised" color="blue" onClick={this.onClickSave}>
-                Save
-              </Button>
-            </Button.Group>
-            <div>Data Set 2 with Transactions superimposed</div>
-            <TList {...{data: listC}} />
+            <Card fluid={true}>
+              <Card.Header textAlign="center" style={{ paddingTop: 10, paddingBottom: 10 }}>
+                Data Set 2 with Transactions superimposed
+              </Card.Header>
+              <Card.Content>
+                <TList {...{data: listC, editable: true, updateDataItem: this.updateDataItem}} />
+              </Card.Content>
+            </Card>
           </Grid.Column>
         </Grid>
       </div>
