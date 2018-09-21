@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Button, Grid } from 'semantic-ui-react'
+import { Button, Grid, Input } from 'semantic-ui-react'
 import TList from './components/card';
 import Transactor from 'sequence-transactor';
  
@@ -8,114 +8,124 @@ class App extends Component {
 
   constructor(props) {
     super(props)
-
-    this.data = [
-      {id: 1, name: 'bob', details: 'bob is cool'},
-      {id: 2, name: 'dave', details: 'bob is cool'},
-      {id: 3, name: 'mike', details: 'bob is cool'},
-      {id: 4, name: 'dan', details: 'bob is cool'}
-    ];
-
-    this.data2 = [
-      {id: 5, name: 'james', details: 'bob is cool'},
-      {id: 6, name: 'steve', details: 'bob is cool'},
-    ]
-
-
     this.transactor = Transactor.create();
-    
+
     this.state = {
-      listA: this.data,
-      listB: [],
-      listC: this.data2,
-    }
+      inputValue: ''
+    };
+
+    this.nextId = 3
+    this.data2 = [
+      {id: 1, name: 'james'},
+      {id: 2, name: 'steve'},
+    ];
 
     this.onClickAdd = this.onClickAdd.bind(this);
     this.onClickUndo = this.onClickUndo.bind(this);
     this.onClickRedo = this.onClickRedo.bind(this);
+    this.onClickSave = this.onClickSave.bind(this);
+    this.onInputChange = this.onInputChange.bind(this);
   }
   
   onClickAdd() {
-    let listA = this.state.listA;
+    let data = {
+      id: this.nextId++,
+      name: this.state.inputValue,
+    } 
 
-    if (listA.length === 0) {
-      return;
-    }
-
-    let next = listA.slice().pop();
-
-    this.transactor.add(next.id, next);
-    this.updateAfter();
+    this.transactor.add(this.nextId, data);
+    console.log('added transaction with data', data)
+    this.setState({
+      inputValue: ''
+    });
   }
 
   onClickUndo() {
     this.transactor.back();
-
-    this.updateAfter();
+    this.forceUpdate();
   }
 
   onClickRedo() {
     this.transactor.forward();
-
-    this.updateAfter();
+    this.forceUpdate();
   }
 
-  updateAfter() {
-    let listA = this.data;
+  onClickSave() {
+    this.transactor.save((data) => {
+      data.forEach(d => {
+        console.log('saved transaction data to dataset 2', d);
+        this.data2.push(d);
+      });
+      return Promise.resolve();
+    }).then(() => {
+      this.transactor.clear();
+      this.forceUpdate();
+    })
+  }
+
+  onInputChange(e) {
+    this.setState({
+      inputValue: e.target.value
+    });
+  }
+
+  getListB() {
+    return this.transactor.get();
+  }
+
+  getListC() {
     let listB = this.transactor.get();
     let listC = this.data2;
 
-    listA = listA.filter(li => {
-      return !listB.some(lib => {
-        return lib.id === li.id;
-      });
-    });
-
-    listC = listC.filter(li => {
+    return listC.filter(li => {
       return !listB.some(lib => {
         return lib.id === li.id;
       });
     }).concat(listB);
-
-    this.setState({
-      listB,
-      listA,
-      listC,
-    });
   }
 
   render() {
+    let listB = this.getListB();
+    let listC = this.getListC();
+
     return (
       <div>
-        <Grid container columns={3}>
+        <Grid container columns={4}>
           <Grid.Column key="1">
-            <Button variant="raised" color="blue" onClick={this.onClickAdd}>
+            <Button variant="raised" color="green" onClick={this.onClickAdd}>
             Add Transaction
             </Button>
           </Grid.Column>
           <Grid.Column key="2">
-            <Button variant="raised" color="blue" onClick={this.onClickUndo}>
+            <Button variant="raised" color="grey" onClick={this.onClickUndo}>
               Undo
             </Button>
           </Grid.Column>
           <Grid.Column key="3">
-            <Button variant="raised" color="blue" onClick={this.onClickRedo}>
+            <Button variant="raised" color="grey" onClick={this.onClickRedo}>
               Redo
+            </Button>
+          </Grid.Column>
+          <Grid.Column key="4">
+            <Button variant="raised" color="blue" onClick={this.onClickSave}>
+              Save
             </Button>
           </Grid.Column>
         </Grid>
         <Grid container columns={3}>
           <Grid.Column key="1">
-            Data Set 1
-            <TList {...{data: this.state.listA}} />
+            <Input focus value={this.state.inputValue} placeholder='name' onChange={this.onInputChange}/>
+            <Button variant="raised" color="green" onClick={this.onClickAdd}>
+              Add Transaction
+            </Button>
           </Grid.Column>
           <Grid.Column key="2">
             Transactions
-            <TList {...{data: this.state.listB}} />
+            <TList {...{data: listB}} />
           </Grid.Column>
           <Grid.Column key="3">
             Data Set 2 with Transactions superimposed
-            <TList {...{data: this.state.listC}} />
+            <TList {...{data: listC}} />
           </Grid.Column>
         </Grid>
       </div>

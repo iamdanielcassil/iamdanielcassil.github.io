@@ -64907,7 +64907,7 @@ var styles = function styles(theme) {
 function makeListItem(data) {
   return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"], {
     key: data.id
-  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, data.name), data.details));
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, data.name)));
 }
 
 function list(props) {
@@ -64972,130 +64972,146 @@ function (_Component) {
     _classCallCheck(this, App);
 
     _this = _possibleConstructorReturn(this, _getPrototypeOf(App).call(this, props));
-    _this.data = [{
-      id: 1,
-      name: 'bob',
-      details: 'bob is cool'
-    }, {
-      id: 2,
-      name: 'dave',
-      details: 'bob is cool'
-    }, {
-      id: 3,
-      name: 'mike',
-      details: 'bob is cool'
-    }, {
-      id: 4,
-      name: 'dan',
-      details: 'bob is cool'
-    }];
-    _this.data2 = [{
-      id: 5,
-      name: 'james',
-      details: 'bob is cool'
-    }, {
-      id: 6,
-      name: 'steve',
-      details: 'bob is cool'
-    }];
     _this.transactor = sequence_transactor__WEBPACK_IMPORTED_MODULE_4___default.a.create();
     _this.state = {
-      listA: _this.data,
-      listB: [],
-      listC: _this.data2
+      inputValue: ''
     };
+    _this.nextId = 3;
+    _this.data2 = [{
+      id: 1,
+      name: 'james'
+    }, {
+      id: 2,
+      name: 'steve'
+    }];
     _this.onClickAdd = _this.onClickAdd.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onClickUndo = _this.onClickUndo.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onClickRedo = _this.onClickRedo.bind(_assertThisInitialized(_assertThisInitialized(_this)));
+    _this.onClickSave = _this.onClickSave.bind(_assertThisInitialized(_assertThisInitialized(_this)));
+    _this.onInputChange = _this.onInputChange.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     return _this;
   }
 
   _createClass(App, [{
     key: "onClickAdd",
     value: function onClickAdd() {
-      var listA = this.state.listA;
-
-      if (listA.length === 0) {
-        return;
-      }
-
-      var next = listA.slice().pop();
-      this.transactor.add(next.id, next);
-      this.updateAfter();
+      var data = {
+        id: this.nextId++,
+        name: this.state.inputValue
+      };
+      this.transactor.add(this.nextId, data);
+      console.log('added transaction with data', data);
+      this.setState({
+        inputValue: ''
+      });
     }
   }, {
     key: "onClickUndo",
     value: function onClickUndo() {
       this.transactor.back();
-      this.updateAfter();
+      this.forceUpdate();
     }
   }, {
     key: "onClickRedo",
     value: function onClickRedo() {
       this.transactor.forward();
-      this.updateAfter();
+      this.forceUpdate();
     }
   }, {
-    key: "updateAfter",
-    value: function updateAfter() {
-      var listA = this.data;
+    key: "onClickSave",
+    value: function onClickSave() {
+      var _this2 = this;
+
+      this.transactor.save(function (data) {
+        data.forEach(function (d) {
+          console.log('saved transaction data to dataset 2', d);
+
+          _this2.data2.push(d);
+        });
+        return Promise.resolve();
+      }).then(function () {
+        _this2.transactor.clear();
+
+        _this2.forceUpdate();
+      });
+    }
+  }, {
+    key: "onInputChange",
+    value: function onInputChange(e) {
+      this.setState({
+        inputValue: e.target.value
+      });
+    }
+  }, {
+    key: "getListB",
+    value: function getListB() {
+      return this.transactor.get();
+    }
+  }, {
+    key: "getListC",
+    value: function getListC() {
       var listB = this.transactor.get();
       var listC = this.data2;
-      listA = listA.filter(function (li) {
-        return !listB.some(function (lib) {
-          return lib.id === li.id;
-        });
-      });
-      listC = listC.filter(function (li) {
+      return listC.filter(function (li) {
         return !listB.some(function (lib) {
           return lib.id === li.id;
         });
       }).concat(listB);
-      this.setState({
-        listB: listB,
-        listA: listA,
-        listC: listC
-      });
     }
   }, {
     key: "render",
     value: function render() {
+      var listB = this.getListB();
+      var listC = this.getListC();
       return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"], {
         container: true,
-        columns: 3
+        columns: 4
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         key: "1"
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
         variant: "raised",
-        color: "blue",
+        color: "green",
         onClick: this.onClickAdd
       }, "Add Transaction")), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         key: "2"
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
         variant: "raised",
-        color: "blue",
+        color: "grey",
         onClick: this.onClickUndo
       }, "Undo")), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         key: "3"
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
         variant: "raised",
-        color: "blue",
+        color: "grey",
         onClick: this.onClickRedo
-      }, "Redo"))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"], {
+      }, "Redo")), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+        key: "4"
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
+        variant: "raised",
+        color: "blue",
+        onClick: this.onClickSave
+      }, "Save"))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"], {
         container: true,
         columns: 3
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         key: "1"
-      }, "Data Set 1", react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_card__WEBPACK_IMPORTED_MODULE_3__["default"], {
-        data: this.state.listA
-      })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Input"], {
+        focus: true,
+        value: this.state.inputValue,
+        placeholder: "name",
+        onChange: this.onInputChange
+      }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
+        variant: "raised",
+        color: "green",
+        onClick: this.onClickAdd
+      }, "Add Transaction")), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         key: "2"
       }, "Transactions", react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_card__WEBPACK_IMPORTED_MODULE_3__["default"], {
-        data: this.state.listB
+        data: listB
       })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         key: "3"
       }, "Data Set 2 with Transactions superimposed", react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_card__WEBPACK_IMPORTED_MODULE_3__["default"], {
-        data: this.state.listC
+        data: listC
       }))));
     }
   }]);

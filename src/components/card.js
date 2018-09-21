@@ -13,7 +13,6 @@ function makeListItem(data) {
 		<Card key={data.id}>
 			<Card.Content>
 				<Card.Header>{data.name}</Card.Header>
-				{data.details}
 			</Card.Content>
 		</Card>
 	);
