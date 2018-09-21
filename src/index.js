@@ -184,9 +184,9 @@ class App extends Component {
       </Menu.Menu>
     );
     let undoMenu = (
-      <Menu.Menu position="left">
-        <Menu.Item fitted="vertically" icon='undo' color="grey" onClick={this.onClickUndo}/>
-        <Menu.Item fitted="vertically" icon='redo' color="grey" onClick={this.onClickRedo}/>
+      <Menu.Menu size="mini" position="left">
+        <Menu.Item size="mini" fitted="vertically" icon='undo' color="grey" onClick={this.onClickUndo}/>
+        <Menu.Item size="mini" fitted="vertically" icon='redo' color="grey" onClick={this.onClickRedo}/>
       </Menu.Menu>
     )
 
@@ -195,7 +195,7 @@ class App extends Component {
         <Grid container columns={3} divided>
           <Grid.Row>
             <Menu borderless secondary fluid>
-              {listB.length > 0 ? undoMenu : ''}
+              {undoMenu}
               {listB.length > 0 ? saveCancelMenu : ''}
             </Menu>
           </Grid.Row>
