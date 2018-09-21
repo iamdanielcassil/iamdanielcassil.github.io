@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Button, Grid, Input } from 'semantic-ui-react'
+import { Button, Grid, Input, Icon } from 'semantic-ui-react'
 import TList from './components/card';
 import Transactor from 'sequence-transactor';
  
@@ -89,29 +89,7 @@ class App extends Component {
     let listC = this.getListC();
 
     return (
-      <div>
-        <Grid container columns={4}>
-          <Grid.Column key="1">
-            <Button variant="raised" color="green" onClick={this.onClickAdd}>
-            Add Transaction
-            </Button>
-          </Grid.Column>
-          <Grid.Column key="2">
-            <Button variant="raised" color="grey" onClick={this.onClickUndo}>
-              Undo
-            </Button>
-          </Grid.Column>
-          <Grid.Column key="3">
-            <Button variant="raised" color="grey" onClick={this.onClickRedo}>
-              Redo
-            </Button>
-          </Grid.Column>
-          <Grid.Column key="4">
-            <Button variant="raised" color="blue" onClick={this.onClickSave}>
-              Save
-            </Button>
-          </Grid.Column>
-        </Grid>
+      <div style={{ margin: 20 }}>
         <Grid container columns={3}>
           <Grid.Column key="1">
             <Input focus value={this.state.inputValue} placeholder='name' onChange={this.onInputChange}/>
@@ -124,7 +102,15 @@ class App extends Component {
             <TList {...{data: listB}} />
           </Grid.Column>
           <Grid.Column key="3">
-            Data Set 2 with Transactions superimposed
+            <Button.Group>
+              <Button icon='undo' color="grey" onClick={this.onClickUndo}/>
+              <Button icon='redo' color="grey" onClick={this.onClickRedo}/>
+              <Icon name="undo"/>
+              <Button variant="raised" color="blue" onClick={this.onClickSave}>
+                Save
+              </Button>
+            </Button.Group>
+            <div>Data Set 2 with Transactions superimposed</div>
             <TList {...{data: listC}} />
           </Grid.Column>
         </Grid>
