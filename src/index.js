@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Button, Grid, Input, Transition, Card, Menu } from 'semantic-ui-react'
+import { Button, Grid, Input, Image, Card, Menu } from 'semantic-ui-react'
 import TList from './components/card';
 import Transactor from 'sequence-transactor';
 
@@ -192,6 +192,7 @@ class App extends Component {
 
     return (
       <div style={{ margin: 20 }}>
+      <Image src="icon.png"/>
         <Grid container columns={3} divided>
           <Grid.Row>
             <Menu borderless secondary fluid>
