@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Card, Menu, Input } from 'semantic-ui-react'
+import { Card, Segment, Input, Header, Label } from 'semantic-ui-react'
 
 /**
  * This demo site was quickly thrown together, please forgive the code mess.
@@ -21,6 +21,7 @@ export default class DataList extends Component {
 		this.edit = this.edit.bind(this);
 		this.onChange = this.onChange.bind(this);
 		this.save = this.save.bind(this);
+		this.cancel = this.cancel.bind(this);
 		this.makeListItem = this.makeListItem.bind(this);
 	}
 
@@ -32,6 +33,12 @@ export default class DataList extends Component {
 
 	save() {
 		this.props.updateDataItem(this.state.itemBeingEdited);
+		this.setState({
+			itemBeingEdited: undefined
+		});
+	}
+
+	cancel() {
 		this.setState({
 			itemBeingEdited: undefined
 		});
@@ -50,7 +57,6 @@ export default class DataList extends Component {
 
 	makeListItem(data, index) {
 		let itemBeingEdited = this.state.itemBeingEdited;
-		let editMenu = null;
 		let isBeingEdited = itemBeingEdited && data.id === itemBeingEdited.id;
 		let content = (
 			<Card.Header>{data.name}</Card.Header>
@@ -59,26 +65,40 @@ export default class DataList extends Component {
 		if (this.props.editable) {
 			if (isBeingEdited) {
 				content = (
-					<Input value={itemBeingEdited.name} onChange={this.onChange}></Input>
+					<Segment padded >
+						<Label.Group as="label" attached="top left">
+						<Label as="a" icon="check" onClick={() => this.save(data)}></Label>
+						<Label as="a" icon="cancel" onClick={() => this.cancel(data)}></Label>
+						</Label.Group>
+						
+						<Card>
+							<Card.Content>
+								<Card.Header>
+									<Input fluid value={itemBeingEdited.name} onChange={this.onChange}></Input>
+								</Card.Header>
+							</Card.Content>
+						</Card>
+					</Segment>
 				)
-				editMenu = (
-					<Menu compact>
-						<Menu.Item icon="check" onClick={this.save} />
-					</Menu>
-				);
 			} else {
-				editMenu = (
-					<Menu compact>
-						<Menu.Item icon="edit" onClick={() => this.edit(data)} />
-					</Menu>
-				);
+				content = (
+					<Segment padded >
+						<Label as="a" icon="edit" attached="top left" onClick={() => this.edit(data)}></Label>
+						<Card>
+							<Card.Content>
+								<Card.Header as="header">
+									{data.name}
+								</Card.Header>
+							</Card.Content>
+						</Card>
+					</Segment>
+				)
 			}
 		}
 
 		return (
 			<Card fluid key={index}>
 				<Card.Content>
-					{editMenu}
 					{content}
 				</Card.Content>
 			</Card>

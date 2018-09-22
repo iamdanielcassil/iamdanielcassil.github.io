@@ -64942,6 +64942,7 @@ function (_Component) {
     _this.edit = _this.edit.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onChange = _this.onChange.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.save = _this.save.bind(_assertThisInitialized(_assertThisInitialized(_this)));
+    _this.cancel = _this.cancel.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.makeListItem = _this.makeListItem.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     return _this;
   }
@@ -64957,6 +64958,13 @@ function (_Component) {
     key: "save",
     value: function save() {
       this.props.updateDataItem(this.state.itemBeingEdited);
+      this.setState({
+        itemBeingEdited: undefined
+      });
+    }
+  }, {
+    key: "cancel",
+    value: function cancel() {
       this.setState({
         itemBeingEdited: undefined
       });
@@ -64978,38 +64986,53 @@ function (_Component) {
       var _this2 = this;
 
       var itemBeingEdited = this.state.itemBeingEdited;
-      var editMenu = null;
       var isBeingEdited = itemBeingEdited && data.id === itemBeingEdited.id;
       var content = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, data.name);
 
       if (this.props.editable) {
         if (isBeingEdited) {
-          content = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Input"], {
+          content = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Segment"], {
+            padded: true
+          }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Label"].Group, {
+            as: "label",
+            attached: "top left"
+          }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Label"], {
+            as: "a",
+            icon: "check",
+            onClick: function onClick() {
+              return _this2.save(data);
+            }
+          }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Label"], {
+            as: "a",
+            icon: "cancel",
+            onClick: function onClick() {
+              return _this2.cancel(data);
+            }
+          })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"], null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Input"], {
+            fluid: true,
             value: itemBeingEdited.name,
             onChange: this.onChange
-          });
-          editMenu = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Menu"], {
-            compact: true
-          }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Menu"].Item, {
-            icon: "check",
-            onClick: this.save
-          }));
+          })))));
         } else {
-          editMenu = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Menu"], {
-            compact: true
-          }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Menu"].Item, {
+          content = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Segment"], {
+            padded: true
+          }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Label"], {
+            as: "a",
             icon: "edit",
+            attached: "top left",
             onClick: function onClick() {
               return _this2.edit(data);
             }
-          }));
+          }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"], null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, {
+            as: "header"
+          }, data.name))));
         }
       }
 
       return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"], {
         fluid: true,
         key: index
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, editMenu, content));
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, content));
     }
   }, {
     key: "render",
@@ -65177,30 +65200,12 @@ function (_Component) {
         return Promise.resolve();
       };
 
-      this.transactor.save(saveFunction).then(function () {
+      this.transactor.saveLatestEdge(saveFunction).then(function () {
         _this2.transactor.clear();
 
         _this2.forceUpdate();
       });
-    } // Example of uising transactor.saveEach
-    // onClickSaveEach() {
-    //   let saveFunction = (data) => {
-    //     let index = this.data2.findIndex(d2 => d2.id === data.id);
-    //       if (index === -1) {
-    //         console.log('saved transaction data as new item to dataset2', data);
-    //         this.data2.push(data);
-    //       } else {
-    //         console.log('saved transaction data as update to dataset2', data);
-    //         this.data2[index] = data;
-    //     }
-    //     return Promise.resolve();
-    //   }
-    //   this.transactor.saveEach(saveFunction).then(() => {
-    //     this.transactor.clear();
-    //     this.forceUpdate();
-    //   })
-    // }
-
+    }
     /**
      * editable data item change handler
      * @param {Event} e 

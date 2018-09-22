@@ -1,6 +1,6 @@
 module.exports = {
   output: {
-    path: __dirname + '/web',
+    path: __dirname + '/',
     publicPath: '/',
     filename: 'build.js'
   },

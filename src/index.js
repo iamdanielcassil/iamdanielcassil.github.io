@@ -93,32 +93,11 @@ class App extends Component {
       return Promise.resolve();
     }
 
-    this.transactor.save(saveFunction).then(() => {
+    this.transactor.saveLatestEdge(saveFunction).then(() => {
       this.transactor.clear();
       this.forceUpdate();
     })
   }
-
-  // Example of uising transactor.saveEach
-  // onClickSaveEach() {
-  //   let saveFunction = (data) => {
-  //     let index = this.data2.findIndex(d2 => d2.id === data.id);
-
-  //       if (index === -1) {
-  //         console.log('saved transaction data as new item to dataset2', data);
-  //         this.data2.push(data);
-  //       } else {
-  //         console.log('saved transaction data as update to dataset2', data);
-  //         this.data2[index] = data;
-  //     }
-  //     return Promise.resolve();
-  //   }
-
-  //   this.transactor.saveEach(saveFunction).then(() => {
-  //     this.transactor.clear();
-  //     this.forceUpdate();
-  //   })
-  // }
 
   /**
    * editable data item change handler
