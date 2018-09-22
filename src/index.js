@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { Button, Grid, Input, Image, Card, Menu } from 'semantic-ui-react'
-import TList from './components/card';
+import TList from './components/editableList';
 import Transactor from 'sequence-transactor';
 
 /**
@@ -21,8 +21,7 @@ class App extends Component {
 
     this.nextId = 3
     this.data2 = [
-      {id: 1, name: 'james'},
-      {id: 2, name: 'steve'},
+      {id: 1, name: 'james Austin'},
     ];
 
     this.onClickAdd = this.onClickAdd.bind(this);
