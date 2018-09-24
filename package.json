@@ -17,7 +17,7 @@
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
     "semantic-ui-react": "^0.82.5",
-    "sequence-transactor": "^1.0.4"
+    "sequence-transactor": "^2.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.1.0",

@@ -31,6 +31,10 @@ export default class DataList extends Component {
 		});
 	}
 
+	delete(data) {
+		this.props.deleteDataItem(data);
+	}
+
 	save() {
 		this.props.updateDataItem(this.state.itemBeingEdited);
 		this.setState({
@@ -58,9 +62,7 @@ export default class DataList extends Component {
 	makeListItem(data, index) {
 		let itemBeingEdited = this.state.itemBeingEdited;
 		let isBeingEdited = itemBeingEdited && data.id === itemBeingEdited.id;
-		let content = (
-			<Card.Header>{data.name}</Card.Header>
-		)
+		let content = null;
 	
 		if (this.props.editable) {
 			if (isBeingEdited) {
@@ -84,6 +86,7 @@ export default class DataList extends Component {
 				content = (
 					<Segment padded >
 						<Label as="a" icon="edit" attached="top left" onClick={() => this.edit(data)}></Label>
+						<Label as="a" icon="delete" attached="top right" onClick={() => this.delete(data)}></Label>
 						<Card>
 							<Card.Content>
 								<Card.Header as="header">
@@ -94,13 +97,21 @@ export default class DataList extends Component {
 					</Segment>
 				)
 			}
+		} else {
+			content = (
+				<Card.Content>
+					<Card.Header>
+						{data.data.name}
+					</Card.Header>
+						<Card.Description>id: {data.id}</Card.Description>
+						<Card.Description>options: {Object.keys(data.options).map(k => `${k} = ${data.options[k]}`).join(', ')}</Card.Description>
+				</Card.Content>
+			)
 		}
 
 		return (
 			<Card fluid key={index}>
-				<Card.Content>
-					{content}
-				</Card.Content>
+				{content}
 			</Card>
 		);
 	}

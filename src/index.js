@@ -19,17 +19,19 @@ class App extends Component {
       inputValue: ''
     };
 
-    this.nextId = 3
+    this.nextId = 2
     this.data2 = [
       {id: 1, name: 'james Austin'},
     ];
 
     this.onClickAdd = this.onClickAdd.bind(this);
+    this.onClickAddSaveable = this.onClickAddSaveable.bind(this);
     this.onClickUndo = this.onClickUndo.bind(this);
     this.onClickRedo = this.onClickRedo.bind(this);
     this.onClickSave = this.onClickSave.bind(this);
     this.onInputChange = this.onInputChange.bind(this);
     this.updateDataItem = this.updateDataItem.bind(this);
+    this.deleteDataItem = this.deleteDataItem.bind(this);
     this.onClickCancel = this.onClickCancel.bind(this);
   }
   
@@ -42,7 +44,23 @@ class App extends Component {
       name: this.state.inputValue,
     } 
 
-    this.transactor.add(this.nextId, data);
+    this.transactor.add(data.id, data, {save: false, add: true});
+    console.log('added transaction with data', data)
+    this.setState({
+      inputValue: ''
+    });
+  }
+
+    /**
+   * add transaction click handler
+   */
+  onClickAddSaveable() {
+    let data = {
+      id: this.nextId++,
+      name: this.state.inputValue,
+    } 
+
+    this.transactor.add(data.id, data, {add: true});
     console.log('added transaction with data', data)
     this.setState({
       inputValue: ''
@@ -77,22 +95,44 @@ class App extends Component {
    * save transactions click handler
    */
   onClickSave() {
-    let saveFunction = (data) => {
+    let put = (data) => {
       data.forEach(d => {
         let index = this.data2.findIndex(d2 => d2.id === d.id);
 
         if (index === -1) {
-          console.log('saved transaction data as new item to dataset2', d);
-          this.data2.push(d);
-        } else {
-          console.log('saved transaction data as update to dataset2', d);
-          this.data2[index] = d;
+         throw(new Error('can not update non existent record'))
         }
+  
+        console.log('saved transaction update');
+        this.data2[index] = d;
       });
-      return Promise.resolve();
+    }
+    let post = (data) => {
+      data.forEach(d => {
+        let index = this.data2.findIndex(d2 => d2.id === d.id);
+
+        if (index !== -1) {
+          throw(new Error('can not create new record with duplicate id'))
+         }
+
+        console.log('saved transaction add');
+        this.data2.push(d);
+      });
+    }
+    let del = (data) => {
+      data.forEach(d => {
+        let index = this.data2.findIndex(d2 => d2.id === d.id);
+
+        if (index === -1) {
+         return;
+        }
+  
+        console.log('saved transaction delete');
+        this.data2.splice([index], 1);
+      });
     }
 
-    this.transactor.saveLatestEdge(saveFunction).then(() => {
+    this.transactor.saveLatestEdge(put, post, del).then(() => {
       this.transactor.clear();
       this.forceUpdate();
     })
@@ -119,20 +159,7 @@ class App extends Component {
    * get list c, data + transactions
    */
   getListC() {
-    let transactions = this.transactor.getLatest();
-    let listC =  this.data2.slice();
-    
-    transactions.forEach(t => {
-      let index = listC.findIndex(d2 => d2.id === t.id);
-
-      if (index === -1) {
-        listC.push(t);
-      } else {
-        listC[index] = t;
-      }
-    })
-
-    return listC;
+    return this.transactor.superimpose(this.data2.map(data => {return { id: data.id, data }})).map(t => t.data);
   }
 
   /**
@@ -141,6 +168,13 @@ class App extends Component {
    */
   updateDataItem(data) {
     this.transactor.add(data.id, data);
+    console.log('added - update - transaction with data', data)
+    this.forceUpdate();
+  }
+
+  deleteDataItem(data) {
+    this.transactor.add(data.id, data, {delete: true});
+    console.log('added - delete - transaction with data', data)
     this.forceUpdate();
   }
 
@@ -181,14 +215,25 @@ class App extends Component {
             </Menu>
           </Grid.Row>
           <Grid.Column style={{ minHeight: 600 }} key="1">
-            <Card fluid={true}>
+            <Card fluid>
               <Card.Header textAlign="center" style={{ paddingTop: 10, paddingBottom: 10 }}>
                 Create New Transaction
               </Card.Header>
               <Card.Content textAlign="center">
                 <Input fluid focus value={this.state.inputValue} placeholder='name' onChange={this.onInputChange}/>
                 <Button style={{ marginTop: 5 }} variant="raised" color="green" onClick={this.onClickAdd}>
-                  Add
+                  transactor.add()
+                </Button>
+              </Card.Content>
+            </Card>
+            <Card fluid>
+              <Card.Header textAlign="center" style={{ paddingTop: 10, paddingBottom: 10 }}>
+                Create New Saveable Transaction
+              </Card.Header>
+              <Card.Content textAlign="center">
+                <Input fluid focus value={this.state.inputValue} placeholder='name' onChange={this.onInputChange}/>
+                <Button style={{ marginTop: 5 }} variant="raised" color="green" onClick={this.onClickAddSaveable}>
+                  transactor.add() saveable
                 </Button>
               </Card.Content>
             </Card>
@@ -196,7 +241,7 @@ class App extends Component {
           <Grid.Column key="2">
             <Card fluid={true}>
               <Card.Header textAlign="center" style={{ paddingTop: 10, paddingBottom: 10 }}>
-                Transactions
+                Transactions - transactor.get()
               </Card.Header>
               <Card.Content>
                 <TList {...{data: listB}} />
@@ -209,7 +254,7 @@ class App extends Component {
                 Data Set 2 with Transactions superimposed
               </Card.Header>
               <Card.Content>
-                <TList {...{data: listC, editable: true, updateDataItem: this.updateDataItem}} />
+                <TList {...{data: listC, editable: true, updateDataItem: this.updateDataItem, deleteDataItem: this.deleteDataItem}} />
               </Card.Content>
             </Card>
           </Grid.Column>

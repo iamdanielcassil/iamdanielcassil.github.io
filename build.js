@@ -64445,7 +64445,7 @@ function defaultSet(value) {
  * @param {Object} options
  */
 class Transactor {
-	constructor(options = { saveAsSequence: true }) {
+	constructor(options) {
 		let transactionData = get() || [];
 
 		this.key = getNextKey(transactionData);
@@ -64461,12 +64461,24 @@ class Transactor {
 	 * @param {Object} data 
 	 * @param {Object} options 
 	 */
-	add(id, data, options = { save: true }) {
+	add(id, data, options = {}) {
+		if (!(options.add || options.update || options.delete)) {
+			options.update = true;
+		}
+		if (options.save !== false) {
+			options.save = true;
+		}
 		this._add(id, data, options);
 		this._revertedTransactions = [];
 	}
 
-	asyncAdd(id, data, options = { save: true }) {
+	/**
+	 * can be called async, but will ensure adds are processed in the order they are created.
+	 * @param {Number} id 
+	 * @param {*} data 
+	 * @param {Object} options 
+	 */
+	asyncAdd(id, data, options = { save: true, add: false, update: true, delete: false }) {
 		return syncAsyncWork(() => {
 			this._add(id, data, options);
 			this._revertedTransactions = [];
@@ -64478,10 +64490,6 @@ class Transactor {
 	 * Undo up to and including the last save transaction
 	 */
 	back() {
-		if (!this.options.saveAsSequence) {
-			throw new Error('Instance must be created with saveAsSequence = true for back() to be used')
-		}
-
 		let transactions = this._get();
 		let isLookingForLastSavedIndex = true;
 		let hasSaveableTransaction = transactions.some(t => t.options.save);
@@ -64503,11 +64511,7 @@ class Transactor {
 	/**
 	 * Redo up to and including the last undone save transaction
 	 */
-	forward() {
-		if (!this.options.saveAsSequence) {
-			throw new Error('Instance must be created with saveAsSequence = true for forward() to be used')
-		}
-		
+	forward() {	
 		let transactions = this._get();
 		let isLookingForLastSavedIndex = true;
 		let hasSaveableTransaction = this._revertedTransactions.some(t => t.options.save);
@@ -64549,122 +64553,110 @@ class Transactor {
 	 * get all transactions for this instance
 	 */
 	get() {
-		return this._get().map(t => t.data);
+		return this._get().map(t => { return { id: t.id, data: t.data, options: t.options }});
 	}
 
-	_getLatest() {
-		let transactions = this._get();
-		let latest = [];
-
-		transactions.forEach(t => {
-			let index = latest.findIndex(l => l.id === t.id);
-
-			if (index === -1) {
-				latest.push(t);
-			} else {
-				latest[index] = t;
-			}
-		});
-
-		return latest;
+	getLatestEdge() {
+		return this._getLatest().map(t => { return { id: t.id, data: t.data, options: t.options }});
 	}
 
-	getLatest() {
-		return this._getLatest().map(l => l.data);
-	}
-
-	/**
-	 * call work function for each transaction.
-	 * @param {Function} work Function called for each transaction.  expects work to return a promise.
-	 * @returns Promise
-	 */
-	saveEach(work, sync = false) {
-		let transactions = this._get();
-		let promises = [];
-	
-		transactions.forEach(transaction => {
-			if (transaction.options.save) {
-				if (sync) {
-					promises.push(syncAsyncWork(work, transaction.data))
-				} else {
-					promises.push(work(transaction.data));
-				}
-				
-			}
-		});
-	
-		return Promise.all(promises);
-	}
-
-	/**
-	 * calls work function one time with array of transactions
-	 * @param {Function} work Function called for each transaction.  expects work to return a promise.
-	 * @returns Promise
-	 */
-	save(work) {
-		let transactions = this._get();
-
-		return this._save(transactions, work);
-	}
-
-	saveLatestEdge(work) {
+	superimpose(data) {
 		let transactions = this._getLatest();
+    let clientData =  data.slice();
+    
+    transactions.forEach(transaction => {
+			let index = clientData.findIndex(clientData => clientData.id === transaction.id);
+			let clientTransaction = {id: transaction.id, data: transaction.data}
 
-		return this._save(transactions, work);
-	}
-
-	_save(transactions, work) {
-		let dataToSave = transactions.filter(transaction => {
-			return transaction.options.save;
-		}).map(transaction => {
-			return transaction.data;
+      if (index === -1 && !transaction.options.delete) {
+        clientData.push(clientTransaction);
+      } else {
+				if (transaction.options.delete) {
+					clientData.splice([index], 1);
+				} else {
+					clientData[index] = clientTransaction;
+				}
+			}
 		});
-
-		// only call work when we have transactions
-		if (dataToSave.length > 0) {
-			return Promise.resolve(work(dataToSave));
-		} else {
-			return Promise.resolve();
-		}
+		
+		return clientData;
 	}
+
+	// /**
+	//  * Convience function - calls work function for each transaction.
+	//  * @param {Function} work Function called for each transaction.  expects work to return a promise.
+	//  * @returns Promise
+	//  */
+	// saveEach(put, post, del) {
+	// 	let transactions = this._get();
+	// 	let promises = [];
+
+	// 	transactions.forEach(transaction => {
+	// 		if (transaction.options.save) {
+	// 			if (transaction.options.add) {
+	// 				_throwIfNoWorker('add', post);
+	// 				promises.push(syncAsyncWork(post, transaction.data));
+	// 			} else if (transaction.options.delete) {
+	// 				_throwIfNoWorker('delete', del);
+	// 				promises.push(syncAsyncWork(del, transaction.data));
+	// 			} else {
+	// 				_throwIfNoWorker('update', put);
+	// 				promises.push(syncAsyncWork(put, transaction.data));
+	// 			}
+	// 		}
+	// 	});
+	
+	// 	return Promise.all(promises);
+	// }
 
 	/**
 	 * calls work function one time with array of transactions
 	 * @param {Function} work Function called for each transaction.  expects work to return a promise.
 	 * @returns Promise
 	 */
-	saveAsync(work, ...args) {
+	save(put, post, del) {
 		let transactions = this._get();
-		let dataToSave = transactions.filter(transaction => {
-			return transaction.options.save;
-		}).map(transaction => {
-			return transaction.data;
-		});
-	
-		// only call work when we have transactions
-		if (dataToSave.length > 0) {
-			return work(dataToSave, ...args);
-		}
-	
-		return Promise.resolve();
+		let sorted = this._sortTransactionsByType(transactions);
+
+		return this._save(sorted, put, post, del);
 	}
 
 	/**
-	 * call work function for each transaction.
-	 * @param {Function} work Function called for each transaction.  expects work to return a promise.
-	 * @returns Promise
+	 * calls work function with array of transactions - if multiple transactions exist for a single ID it choses the latest one
+	 * @param {Function} work 
 	 */
-	saveEachAsync(work, ...args) {
-		let transactions = this._get();
-		let promises = [];
-	
-		transactions.forEach(transaction => {
-			if (transaction.options.save) {
-				promises.push(work(transaction.data, ...args));
-			}
-		});
-	
-		return Promise.all(promises);
+	saveLatestEdge(put, post, del) {
+		let transactions = this._getLatest();
+		let sorted = this._sortTransactionsByType(transactions);
+
+		return this._save(sorted, put, post, del);
+	}
+
+	/**
+	 * Internal add transaction to instance store
+	 * @param {String} id 
+	 * @param {Object} data 
+	 * @param {Object} options 
+	 */
+	_add(id, data, options) {
+		let transactionData = this._get();
+		let _id = this._getUniqueId(id);
+		let thisTransaction = {
+			id,
+			data,
+			options,
+			_id,
+		};
+		let thisTransactionIndex = transactionData.findIndex(t => t._id === _id);
+
+		if (thisTransactionIndex === -1) {
+			transactionData.push(thisTransaction);
+		} else {
+			// This creates new transactions for each change.  If we are not saving this transaction, we do not need to worry about creating a unique one, we should update the old.
+			transactionData.push(thisTransaction);
+		}
+
+		this._set(transactionData);
 	}
 
 	/**
@@ -64672,6 +64664,99 @@ class Transactor {
 	 */
 	_get() {
 		return get()[this.key];
+	}
+
+	/**
+	 * Internal get transactions choising the last for each unique id
+	 */
+	_getLatest() {
+		let transactions = this._get().slice();
+		let dataToSave = [];
+
+		transactions.forEach(transaction => {
+			let index = dataToSave.findIndex(d => d.id === transaction.id);
+
+			if (index === -1) {
+				dataToSave.push(transaction);
+			} else {
+				let existingData = dataToSave[index];
+
+				if (existingData.options.add) {
+					if (transaction.options.delete) {
+						dataToSave.splice(index, 1);
+					} else {
+						transaction.options = {save: transaction.options.save, add: true}
+						dataToSave[index] = transaction
+					}
+				} else {
+					dataToSave[index] = transaction;
+				}
+			}
+		});
+
+		return dataToSave;
+	}
+
+	/**
+	 * get the next unique id
+	 * @param {number} id 
+	 */
+	_getUniqueId(id) {
+		let existingIds = this._get().map(t => t._id);
+		
+		if (existingIds.length === 0) {
+			return id;
+		} else {
+			return Math.max(...existingIds) + 1;
+		}
+	}
+
+	_isDeleteTransaction(transaction) {
+		return transaction.data === undefined;
+	}
+
+	/**
+	 * Call work function with array of transactions
+	 * @param {Array} transactions 
+	 * @param {Function} work 
+	 */
+	_save(dataToSave, put, post, del) {
+		let workPromises = [];
+
+		// only call work when we have transactions
+		if (dataToSave.add.length > 0) {
+			workPromises.push(post(dataToSave.add));
+		}
+		if (dataToSave.delete.length > 0) {
+			workPromises.push(del(dataToSave.delete));
+		}
+		if (dataToSave.update.length > 0) {
+			workPromises.push(put(dataToSave.update));
+		}
+
+		if (workPromises.length === 0) {
+			return Promise.resolve();
+		}
+
+		return Promise.all(workPromises);
+	}
+
+	_sortTransactionsByType(transactions) {
+		let dataToSave = {add: [], update: [], delete: []};
+
+		transactions.forEach(transaction => {
+			if (transaction.options.save) {
+				if (transaction.options.add) {
+					dataToSave.add.push(transaction.data);
+				} else if (transaction.options.delete) {
+					dataToSave.delete.push(transaction.data);
+				} else {
+					dataToSave.update.push(transaction.data);
+				}
+			}
+		});
+
+		return dataToSave;
 	}
 
 	/**
@@ -64684,45 +64769,7 @@ class Transactor {
 		set(transactions);
 	}
 
-	/**
-	 * Internal add transaction to instance store
-	 * @param {String} id 
-	 * @param {Object} data 
-	 * @param {Object} options 
-	 */
-	_add(id, data, options) {
-		let transactionData = this._get();
-		let _id = this.options.saveAsSequence ? this._getUniqueId(id) : id;
-		let thisTransaction = {
-			id,
-			data,
-			options,
-			_id,
-		};
-		let thisTransactionIndex = transactionData.findIndex(t => t._id === _id);
-		
-
-		if (thisTransactionIndex === -1) {
-			transactionData.push(thisTransaction);
-		} else if (this.options.saveAsSequence) {
-			// This creates new transactions for each change.  If we are not saving this transaction, we do not need to worry about creating a unique one, we should update the old.
-			transactionData.push(thisTransaction);
-		} else {
-			transactionData[thisTransactionIndex] = thisTransaction;
-		}
-
-		this._set(transactionData);
-	}
-
-	_getUniqueId(id) {
-		let existingIds = this._get().map(t => t._id);
-		
-		if (existingIds.length === 0) {
-			return id;
-		} else {
-			return Math.max(...existingIds) + 1;
-		}
-	}
+	
 }
 
 let working = Promise.resolve();
@@ -64749,6 +64796,12 @@ function getNextKey(transactionData) {
 	let keys = Object.keys(transactionData);
 	
 	return keys.length > 0 ? Math.max(...keys) + 1 : 0;
+}
+
+function _throwIfNoWorker(type, functionToEnsure) {
+	if (typeof functionToEnsure !== 'function') {
+		throw new Error(`transaction was created with option: ${type}, but not valid function was given to handle this type.`);
+	}
 }
 
 module.exports = {
@@ -64880,10 +64933,10 @@ module.exports = function(module) {
 
 /***/ }),
 
-/***/ "./src/components/card.js":
-/*!********************************!*\
-  !*** ./src/components/card.js ***!
-  \********************************/
+/***/ "./src/components/editableList.js":
+/*!****************************************!*\
+  !*** ./src/components/editableList.js ***!
+  \****************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -64955,6 +65008,11 @@ function (_Component) {
       });
     }
   }, {
+    key: "delete",
+    value: function _delete(data) {
+      this.props.deleteDataItem(data);
+    }
+  }, {
     key: "save",
     value: function save() {
       this.props.updateDataItem(this.state.itemBeingEdited);
@@ -64987,7 +65045,7 @@ function (_Component) {
 
       var itemBeingEdited = this.state.itemBeingEdited;
       var isBeingEdited = itemBeingEdited && data.id === itemBeingEdited.id;
-      var content = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, data.name);
+      var content = null;
 
       if (this.props.editable) {
         if (isBeingEdited) {
@@ -65023,16 +65081,27 @@ function (_Component) {
             onClick: function onClick() {
               return _this2.edit(data);
             }
+          }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Label"], {
+            as: "a",
+            icon: "delete",
+            attached: "top right",
+            onClick: function onClick() {
+              return _this2.delete(data);
+            }
           }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"], null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, {
             as: "header"
           }, data.name))));
         }
+      } else {
+        content = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, data.data.name), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, "id: ", data.id), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, "options: ", Object.keys(data.options).map(function (k) {
+          return "".concat(k, " = ").concat(data.options[k]);
+        }).join(', ')));
       }
 
       return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"], {
         fluid: true,
         key: index
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, content));
+      }, content);
     }
   }, {
     key: "render",
@@ -65062,7 +65131,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! semantic-ui-react */ "./node_modules/semantic-ui-react/dist/es/index.js");
-/* harmony import */ var _components_card__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./components/card */ "./src/components/card.js");
+/* harmony import */ var _components_editableList__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./components/editableList */ "./src/components/editableList.js");
 /* harmony import */ var sequence_transactor__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! sequence-transactor */ "./node_modules/sequence-transactor/src/transactor.js");
 /* harmony import */ var sequence_transactor__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(sequence_transactor__WEBPACK_IMPORTED_MODULE_4__);
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -65108,20 +65177,19 @@ function (_Component) {
     _this.state = {
       inputValue: ''
     };
-    _this.nextId = 3;
+    _this.nextId = 2;
     _this.data2 = [{
       id: 1,
-      name: 'james'
-    }, {
-      id: 2,
-      name: 'steve'
+      name: 'james Austin'
     }];
     _this.onClickAdd = _this.onClickAdd.bind(_assertThisInitialized(_assertThisInitialized(_this)));
+    _this.onClickAddSaveable = _this.onClickAddSaveable.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onClickUndo = _this.onClickUndo.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onClickRedo = _this.onClickRedo.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onClickSave = _this.onClickSave.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onInputChange = _this.onInputChange.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.updateDataItem = _this.updateDataItem.bind(_assertThisInitialized(_assertThisInitialized(_this)));
+    _this.deleteDataItem = _this.deleteDataItem.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onClickCancel = _this.onClickCancel.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     return _this;
   }
@@ -65137,7 +65205,29 @@ function (_Component) {
         id: this.nextId++,
         name: this.state.inputValue
       };
-      this.transactor.add(this.nextId, data);
+      this.transactor.add(data.id, data, {
+        save: false,
+        add: true
+      });
+      console.log('added transaction with data', data);
+      this.setState({
+        inputValue: ''
+      });
+    }
+    /**
+    * add transaction click handler
+    */
+
+  }, {
+    key: "onClickAddSaveable",
+    value: function onClickAddSaveable() {
+      var data = {
+        id: this.nextId++,
+        name: this.state.inputValue
+      };
+      this.transactor.add(data.id, data, {
+        add: true
+      });
       console.log('added transaction with data', data);
       this.setState({
         inputValue: ''
@@ -65182,25 +65272,54 @@ function (_Component) {
     value: function onClickSave() {
       var _this2 = this;
 
-      var saveFunction = function saveFunction(data) {
+      var put = function put(data) {
         data.forEach(function (d) {
           var index = _this2.data2.findIndex(function (d2) {
             return d2.id === d.id;
           });
 
           if (index === -1) {
-            console.log('saved transaction data as new item to dataset2', d);
-
-            _this2.data2.push(d);
-          } else {
-            console.log('saved transaction data as update to dataset2', d);
-            _this2.data2[index] = d;
+            throw new Error('can not update non existent record');
           }
+
+          console.log('saved transaction update');
+          _this2.data2[index] = d;
         });
-        return Promise.resolve();
       };
 
-      this.transactor.saveLatestEdge(saveFunction).then(function () {
+      var post = function post(data) {
+        data.forEach(function (d) {
+          var index = _this2.data2.findIndex(function (d2) {
+            return d2.id === d.id;
+          });
+
+          if (index !== -1) {
+            throw new Error('can not create new record with duplicate id');
+          }
+
+          console.log('saved transaction add');
+
+          _this2.data2.push(d);
+        });
+      };
+
+      var del = function del(data) {
+        data.forEach(function (d) {
+          var index = _this2.data2.findIndex(function (d2) {
+            return d2.id === d.id;
+          });
+
+          if (index === -1) {
+            return;
+          }
+
+          console.log('saved transaction delete');
+
+          _this2.data2.splice([index], 1);
+        });
+      };
+
+      this.transactor.saveLatestEdge(put, post, del).then(function () {
         _this2.transactor.clear();
 
         _this2.forceUpdate();
@@ -65234,20 +65353,14 @@ function (_Component) {
   }, {
     key: "getListC",
     value: function getListC() {
-      var transactions = this.transactor.getLatest();
-      var listC = this.data2.slice();
-      transactions.forEach(function (t) {
-        var index = listC.findIndex(function (d2) {
-          return d2.id === t.id;
-        });
-
-        if (index === -1) {
-          listC.push(t);
-        } else {
-          listC[index] = t;
-        }
+      return this.transactor.superimpose(this.data2.map(function (data) {
+        return {
+          id: data.id,
+          data: data
+        };
+      })).map(function (t) {
+        return t.data;
       });
-      return listC;
     }
     /**
      * update editable field save click handler
@@ -65258,6 +65371,16 @@ function (_Component) {
     key: "updateDataItem",
     value: function updateDataItem(data) {
       this.transactor.add(data.id, data);
+      console.log('added - update - transaction with data', data);
+      this.forceUpdate();
+    }
+  }, {
+    key: "deleteDataItem",
+    value: function deleteDataItem(data) {
+      this.transactor.add(data.id, data, {
+        delete: true
+      });
+      console.log('added - delete - transaction with data', data);
       this.forceUpdate();
     }
   }, {
@@ -65341,7 +65464,30 @@ function (_Component) {
         variant: "raised",
         color: "green",
         onClick: this.onClickAdd
-      }, "Add")))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+      }, "transactor.add()"))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"], {
+        fluid: true
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Header, {
+        textAlign: "center",
+        style: {
+          paddingTop: 10,
+          paddingBottom: 10
+        }
+      }, "Create New Saveable Transaction"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, {
+        textAlign: "center"
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Input"], {
+        fluid: true,
+        focus: true,
+        value: this.state.inputValue,
+        placeholder: "name",
+        onChange: this.onInputChange
+      }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
+        style: {
+          marginTop: 5
+        },
+        variant: "raised",
+        color: "green",
+        onClick: this.onClickAddSaveable
+      }, "transactor.add() saveable")))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         key: "2"
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"], {
         fluid: true
@@ -65351,7 +65497,7 @@ function (_Component) {
           paddingTop: 10,
           paddingBottom: 10
         }
-      }, "Transactions"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_card__WEBPACK_IMPORTED_MODULE_3__["default"], {
+      }, "Transactions - transactor.get()"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_editableList__WEBPACK_IMPORTED_MODULE_3__["default"], {
         data: listB
       })))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         key: "3"
@@ -65363,10 +65509,11 @@ function (_Component) {
           paddingTop: 10,
           paddingBottom: 10
         }
-      }, "Data Set 2 with Transactions superimposed"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_card__WEBPACK_IMPORTED_MODULE_3__["default"], {
+      }, "Data Set 2 with Transactions superimposed"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_editableList__WEBPACK_IMPORTED_MODULE_3__["default"], {
         data: listC,
         editable: true,
-        updateDataItem: this.updateDataItem
+        updateDataItem: this.updateDataItem,
+        deleteDataItem: this.deleteDataItem
       }))))));
     }
   }]);
