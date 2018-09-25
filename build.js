@@ -64397,8 +64397,8 @@ __webpack_require__.r(__webpack_exports__);
 
 let store = {};
 let maxKey = 0;
-let get;
-let set;
+let getter;
+let setter;
 
 /**
  * init
@@ -64406,8 +64406,8 @@ let set;
  * @param {function} dataSet define a setter function for a custom data storage solution
  */
 let init = function init(dataGet, dataSet) {
-	get = dataGet || defaultGet;
-	set = dataSet || defaultSet;
+	getter = dataGet || defaultGet;
+	setter = dataSet || defaultSet;
 }
 
 /**
@@ -64415,7 +64415,7 @@ let init = function init(dataGet, dataSet) {
  * @param {Object} options 
  */
 let create = function create(options) {
-	if (get === undefined) {
+	if (getter === undefined) {
 		module.exports.init();
 	}
 
@@ -64446,28 +64446,22 @@ function defaultSet(value) {
  */
 class Transactor {
 	constructor(options) {
-		let transactionData = get() || [];
+		let transactionData = getter() || [];
 
-		this.key = getNextKey(transactionData);
+		this.key = _getNextKey(transactionData);
 		this._revertedTransactions = [];
 		this.options = options;
 		transactionData[this.key] = [];
-		set(transactionData);
+		setter(transactionData);
 	}
 
 	/**
 	 * Add a transaction.
-	 * @param {String} id 
-	 * @param {Object} data 
+	 * @param {*} id 
+	 * @param {*} data - transaction data to save
 	 * @param {Object} options 
 	 */
 	add(id, data, options = {}) {
-		if (!(options.add || options.update || options.delete)) {
-			options.update = true;
-		}
-		if (options.save !== false) {
-			options.save = true;
-		}
 		this._add(id, data, options);
 		this._revertedTransactions = [];
 	}
@@ -64478,8 +64472,8 @@ class Transactor {
 	 * @param {*} data 
 	 * @param {Object} options 
 	 */
-	asyncAdd(id, data, options = { save: true, add: false, update: true, delete: false }) {
-		return syncAsyncWork(() => {
+	asyncAdd(id, data, options = {}) {
+		return _syncAsyncWork(() => {
 			this._add(id, data, options);
 			this._revertedTransactions = [];
 			return Promise.resolve();
@@ -64543,10 +64537,10 @@ class Transactor {
 	 * destroy the store data for this transactor instance
 	 */
 	destroy() {
-		let transactionData = get();
+		let transactionData = getter();
 
 		delete transactionData[this.key];
-		set(transactionData);
+		setter(transactionData);
 	}
 
 	/**
@@ -64582,32 +64576,49 @@ class Transactor {
 		return clientData;
 	}
 
-	// /**
-	//  * Convience function - calls work function for each transaction.
-	//  * @param {Function} work Function called for each transaction.  expects work to return a promise.
-	//  * @returns Promise
-	//  */
-	// saveEach(put, post, del) {
-	// 	let transactions = this._get();
-	// 	let promises = [];
+	/**
+	 * Convience function - calls work function for each transaction.
+	 * @param {Function} work Function called for each transaction.  expects work to return a promise.
+	 * @returns Promise
+	 */
+	saveEach(put, post, del) {
+		let transactions = this._get();
 
-	// 	transactions.forEach(transaction => {
-	// 		if (transaction.options.save) {
-	// 			if (transaction.options.add) {
-	// 				_throwIfNoWorker('add', post);
-	// 				promises.push(syncAsyncWork(post, transaction.data));
-	// 			} else if (transaction.options.delete) {
-	// 				_throwIfNoWorker('delete', del);
-	// 				promises.push(syncAsyncWork(del, transaction.data));
-	// 			} else {
-	// 				_throwIfNoWorker('update', put);
-	// 				promises.push(syncAsyncWork(put, transaction.data));
-	// 			}
-	// 		}
-	// 	});
+		return this._saveEach(transactions, put, post, del);
+	}
+
+	saveEachEdge(put, post, del) {
+		let transactions = this._getLatest();
+
+		return this._saveEach(transactions, put, post, del);
+	}
+
+
+	/**
+	 * Convience function - calls work function for each transaction.
+	 * @param {Function} work Function called for each transaction.  expects work to return a promise.
+	 * @returns Promise
+	 */
+	_saveEach(transactions, put, post, del) {
+		let promises = [];
+
+		transactions.forEach(transaction => {
+			if (transaction.options.save) {
+				if (transaction.options.add) {
+					_throwIfNoWorker('add', post);
+					promises.push(_syncAsyncWork(post, transaction.data));
+				} else if (transaction.options.delete) {
+					_throwIfNoWorker('delete', del);
+					promises.push(_syncAsyncWork(del, transaction.data));
+				} else {
+					_throwIfNoWorker('update', put);
+					promises.push(_syncAsyncWork(put, transaction.data));
+				}
+			}
+		});
 	
-	// 	return Promise.all(promises);
-	// }
+		return Promise.all(promises);
+	}
 
 	/**
 	 * calls work function one time with array of transactions
@@ -64616,7 +64627,7 @@ class Transactor {
 	 */
 	save(put, post, del) {
 		let transactions = this._get();
-		let sorted = this._sortTransactionsByType(transactions);
+		let sorted = _sortTransactionsByType(transactions);
 
 		return this._save(sorted, put, post, del);
 	}
@@ -64627,7 +64638,7 @@ class Transactor {
 	 */
 	saveLatestEdge(put, post, del) {
 		let transactions = this._getLatest();
-		let sorted = this._sortTransactionsByType(transactions);
+		let sorted = _sortTransactionsByType(transactions);
 
 		return this._save(sorted, put, post, del);
 	}
@@ -64639,6 +64650,13 @@ class Transactor {
 	 * @param {Object} options 
 	 */
 	_add(id, data, options) {
+		if (!(options.add || options.update || options.delete)) {
+			options.update = true;
+		}
+		if (options.save !== false) {
+			options.save = true;
+		}
+
 		let transactionData = this._get();
 		let _id = this._getUniqueId(id);
 		let thisTransaction = {
@@ -64647,14 +64665,8 @@ class Transactor {
 			options,
 			_id,
 		};
-		let thisTransactionIndex = transactionData.findIndex(t => t._id === _id);
 
-		if (thisTransactionIndex === -1) {
-			transactionData.push(thisTransaction);
-		} else {
-			// This creates new transactions for each change.  If we are not saving this transaction, we do not need to worry about creating a unique one, we should update the old.
-			transactionData.push(thisTransaction);
-		}
+		transactionData.push(thisTransaction);
 
 		this._set(transactionData);
 	}
@@ -64663,7 +64675,7 @@ class Transactor {
 	 * Intenral get transactions for this instance
 	 */
 	_get() {
-		return get()[this.key];
+		return getter()[this.key];
 	}
 
 	/**
@@ -64727,11 +64739,11 @@ class Transactor {
 		if (dataToSave.add.length > 0) {
 			workPromises.push(post(dataToSave.add));
 		}
-		if (dataToSave.delete.length > 0) {
-			workPromises.push(del(dataToSave.delete));
-		}
 		if (dataToSave.update.length > 0) {
 			workPromises.push(put(dataToSave.update));
+		}
+		if (dataToSave.delete.length > 0) {
+			workPromises.push(del(dataToSave.delete));
 		}
 
 		if (workPromises.length === 0) {
@@ -64741,40 +64753,50 @@ class Transactor {
 		return Promise.all(workPromises);
 	}
 
-	_sortTransactionsByType(transactions) {
-		let dataToSave = {add: [], update: [], delete: []};
-
-		transactions.forEach(transaction => {
-			if (transaction.options.save) {
-				if (transaction.options.add) {
-					dataToSave.add.push(transaction.data);
-				} else if (transaction.options.delete) {
-					dataToSave.delete.push(transaction.data);
-				} else {
-					dataToSave.update.push(transaction.data);
-				}
-			}
-		});
-
-		return dataToSave;
-	}
-
 	/**
 	 * Intenral set transactions for this instance
 	 */
 	_set(data = []) {
-		let transactions = get();
+		let transactions = getter();
 
 		transactions[this.key] = data;
-		set(transactions);
+		setter(transactions);
 	}
+}
 
+
+
+/**
+ * gets the next transaction key for this instance.
+ * @param {Object} transactionData 
+ */
+function _getNextKey(transactionData) {
+	let keys = Object.keys(transactionData);
 	
+	return keys.length > 0 ? Math.max(...keys) + 1 : 0;
+}
+
+function 	_sortTransactionsByType(transactions) {
+	let dataToSave = {add: [], update: [], delete: []};
+
+	transactions.forEach(transaction => {
+		if (transaction.options.save) {
+			if (transaction.options.add) {
+				dataToSave.add.push(transaction.data);
+			} else if (transaction.options.delete) {
+				dataToSave.delete.push(transaction.data);
+			} else {
+				dataToSave.update.push(transaction.data);
+			}
+		}
+	});
+
+	return dataToSave;
 }
 
 let working = Promise.resolve();
 
-function syncAsyncWork(worker, payload) {
+function _syncAsyncWork(worker, payload) {
 	let nextWorking = new Promise((resolve, reject) => {
 		working.then(() => {
 			worker(payload).then(() => {
@@ -64788,19 +64810,9 @@ function syncAsyncWork(worker, payload) {
 	return nextWorking;
 }
 
-/**
- * gets the next transaction key for this instance.
- * @param {Object} transactionData 
- */
-function getNextKey(transactionData) {
-	let keys = Object.keys(transactionData);
-	
-	return keys.length > 0 ? Math.max(...keys) + 1 : 0;
-}
-
 function _throwIfNoWorker(type, functionToEnsure) {
 	if (typeof functionToEnsure !== 'function') {
-		throw new Error(`transaction was created with option: ${type}, but not valid function was given to handle this type.`);
+		throw new Error('transaction was created with option: ' + type + ', but no valid function was given to handle this type.');
 	}
 }
 
@@ -65040,9 +65052,11 @@ function (_Component) {
     }
   }, {
     key: "makeListItem",
-    value: function makeListItem(data, index) {
+    value: function makeListItem() {
       var _this2 = this;
 
+      var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var index = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
       var itemBeingEdited = this.state.itemBeingEdited;
       var isBeingEdited = itemBeingEdited && data.id === itemBeingEdited.id;
       var content = null;
@@ -65090,12 +65104,12 @@ function (_Component) {
             }
           }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"], null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, {
             as: "header"
-          }, data.name))));
+          }, data.name), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, data.details))));
         }
       } else {
-        content = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, data.data.name), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, "id: ", data.id), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, "options: ", Object.keys(data.options).map(function (k) {
+        content = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, data.name), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, "id: ", data.id), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, "options: ", data.options ? Object.keys(data.options).map(function (k) {
           return "".concat(k, " = ").concat(data.options[k]);
-        }).join(', ')));
+        }).join(', ') : ''));
       }
 
       return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"], {
@@ -65182,7 +65196,6 @@ function (_Component) {
       id: 1,
       name: 'james Austin'
     }];
-    _this.onClickAdd = _this.onClickAdd.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onClickAddSaveable = _this.onClickAddSaveable.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onClickUndo = _this.onClickUndo.bind(_assertThisInitialized(_assertThisInitialized(_this)));
     _this.onClickRedo = _this.onClickRedo.bind(_assertThisInitialized(_assertThisInitialized(_this)));
@@ -65199,11 +65212,13 @@ function (_Component) {
 
 
   _createClass(App, [{
-    key: "onClickAdd",
-    value: function onClickAdd() {
+    key: "createSubRecord",
+    value: function createSubRecord(parentId) {
       var data = {
         id: this.nextId++,
-        name: this.state.inputValue
+        parentId: parentId,
+        name: "sibling of ".concat(parentId),
+        details: 'you can create non saveable transactions to effect client side data until save to mimic actions '
       };
       this.transactor.add(data.id, data, {
         save: false,
@@ -65229,6 +65244,7 @@ function (_Component) {
         add: true
       });
       console.log('added transaction with data', data);
+      this.createSubRecord(data.id);
       this.setState({
         inputValue: ''
       });
@@ -65360,6 +65376,27 @@ function (_Component) {
         };
       })).map(function (t) {
         return t.data;
+      }).filter(function (t) {
+        return t.parentId === undefined;
+      });
+    }
+    /**
+    * get list c, data + transactions
+    */
+
+  }, {
+    key: "getListD",
+    value: function getListD() {
+      return this.transactor.superimpose(this.data2.map(function (data) {
+        return {
+          id: data.id,
+          data: data
+        };
+      })).map(function (t) {
+        t.data.options = t.options;
+        return t.data;
+      }).filter(function (t) {
+        return t.parentId !== undefined;
       });
     }
     /**
@@ -65377,8 +65414,18 @@ function (_Component) {
   }, {
     key: "deleteDataItem",
     value: function deleteDataItem(data) {
+      var _this3 = this;
+
+      var siblingTransactions = this.transactor.get().filter(function (t) {
+        return t.data.parentId === data.id;
+      });
       this.transactor.add(data.id, data, {
         delete: true
+      });
+      siblingTransactions.forEach(function (st) {
+        _this3.transactor.add(st.id, st.data, {
+          delete: true
+        });
       });
       console.log('added - delete - transaction with data', data);
       this.forceUpdate();
@@ -65388,6 +65435,7 @@ function (_Component) {
     value: function render() {
       var listB = this.getTransactions();
       var listC = this.getListC();
+      var listD = this.getListD();
       var saveCancelMenu = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Menu, {
         position: "right"
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Menu"].Item, {
@@ -65424,7 +65472,7 @@ function (_Component) {
         }
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"], {
         container: true,
-        columns: 3,
+        columns: 4,
         divided: true
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Row, {
         centered: true,
@@ -65463,31 +65511,8 @@ function (_Component) {
         },
         variant: "raised",
         color: "green",
-        onClick: this.onClickAdd
-      }, "transactor.add()"))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"], {
-        fluid: true
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Header, {
-        textAlign: "center",
-        style: {
-          paddingTop: 10,
-          paddingBottom: 10
-        }
-      }, "Create New Saveable Transaction"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, {
-        textAlign: "center"
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Input"], {
-        fluid: true,
-        focus: true,
-        value: this.state.inputValue,
-        placeholder: "name",
-        onChange: this.onInputChange
-      }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Button"], {
-        style: {
-          marginTop: 5
-        },
-        variant: "raised",
-        color: "green",
         onClick: this.onClickAddSaveable
-      }, "transactor.add() saveable")))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+      }, 'transactor.add({save: true})')))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         key: "2"
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"], {
         fluid: true
@@ -65514,6 +65539,18 @@ function (_Component) {
         editable: true,
         updateDataItem: this.updateDataItem,
         deleteDataItem: this.deleteDataItem
+      })))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
+        key: "4"
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"], {
+        fluid: true
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Header, {
+        textAlign: "center",
+        style: {
+          paddingTop: 10,
+          paddingBottom: 10
+        }
+      }, "Non saveable - system created content"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_editableList__WEBPACK_IMPORTED_MODULE_3__["default"], {
+        data: listD
       }))))));
     }
   }]);

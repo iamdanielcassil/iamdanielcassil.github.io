@@ -24,7 +24,6 @@ class App extends Component {
       {id: 1, name: 'james Austin'},
     ];
 
-    this.onClickAdd = this.onClickAdd.bind(this);
     this.onClickAddSaveable = this.onClickAddSaveable.bind(this);
     this.onClickUndo = this.onClickUndo.bind(this);
     this.onClickRedo = this.onClickRedo.bind(this);
@@ -38,10 +37,12 @@ class App extends Component {
   /**
    * add transaction click handler
    */
-  onClickAdd() {
+  createSubRecord(parentId) {
     let data = {
       id: this.nextId++,
-      name: this.state.inputValue,
+      parentId,
+      name: `sibling of ${parentId}`,
+      details: 'you can create non saveable transactions to effect client side data until save to mimic actions ',
     } 
 
     this.transactor.add(data.id, data, {save: false, add: true});
@@ -62,6 +63,7 @@ class App extends Component {
 
     this.transactor.add(data.id, data, {add: true});
     console.log('added transaction with data', data)
+    this.createSubRecord(data.id);
     this.setState({
       inputValue: ''
     });
@@ -159,7 +161,19 @@ class App extends Component {
    * get list c, data + transactions
    */
   getListC() {
-    return this.transactor.superimpose(this.data2.map(data => {return { id: data.id, data }})).map(t => t.data);
+    return this.transactor.superimpose(this.data2.map(data => {return { id: data.id, data }})).map(t => t.data).filter(t => t.parentId === undefined);
+  }
+
+    /**
+   * get list c, data + transactions
+   */
+  getListD() {
+    return this.transactor.superimpose(this.data2.map(data => {
+      return { id: data.id, data }
+    })).map(t => {
+      t.data.options = t.options
+      return t.data;
+    }).filter(t => t.parentId !== undefined);
   }
 
   /**
@@ -173,7 +187,13 @@ class App extends Component {
   }
 
   deleteDataItem(data) {
+    let siblingTransactions = this.transactor.get().filter(t => t.data.parentId === data.id);
     this.transactor.add(data.id, data, {delete: true});
+
+    siblingTransactions.forEach(st => {
+      this.transactor.add(st.id, st.data, {delete: true});
+    });
+
     console.log('added - delete - transaction with data', data)
     this.forceUpdate();
   }
@@ -181,6 +201,7 @@ class App extends Component {
   render() {
     let listB = this.getTransactions();
     let listC = this.getListC();
+    let listD = this.getListD();
     let saveCancelMenu = (
       <Menu.Menu position="right">
         <Menu.Item fitted="vertically">
@@ -204,7 +225,7 @@ class App extends Component {
 
     return (
       <div style={{ margin: 20 }}>
-        <Grid container columns={3} divided>
+        <Grid container columns={4} divided>
         <Grid.Row centered textAlign="center">
         <div><Image src="icon.png" size="tiny"/></div>
         </Grid.Row>
@@ -221,19 +242,8 @@ class App extends Component {
               </Card.Header>
               <Card.Content textAlign="center">
                 <Input fluid focus value={this.state.inputValue} placeholder='name' onChange={this.onInputChange}/>
-                <Button style={{ marginTop: 5 }} variant="raised" color="green" onClick={this.onClickAdd}>
-                  transactor.add()
-                </Button>
-              </Card.Content>
-            </Card>
-            <Card fluid>
-              <Card.Header textAlign="center" style={{ paddingTop: 10, paddingBottom: 10 }}>
-                Create New Saveable Transaction
-              </Card.Header>
-              <Card.Content textAlign="center">
-                <Input fluid focus value={this.state.inputValue} placeholder='name' onChange={this.onInputChange}/>
                 <Button style={{ marginTop: 5 }} variant="raised" color="green" onClick={this.onClickAddSaveable}>
-                  transactor.add() saveable
+                  {'transactor.add({save: true})'} 
                 </Button>
               </Card.Content>
             </Card>
@@ -255,6 +265,16 @@ class App extends Component {
               </Card.Header>
               <Card.Content>
                 <TList {...{data: listC, editable: true, updateDataItem: this.updateDataItem, deleteDataItem: this.deleteDataItem}} />
+              </Card.Content>
+            </Card>
+          </Grid.Column>
+          <Grid.Column key="4">
+            <Card fluid={true}>
+              <Card.Header textAlign="center" style={{ paddingTop: 10, paddingBottom: 10 }}>
+                Non saveable - system created content
+              </Card.Header>
+              <Card.Content>
+                <TList {...{data: listD}} />
               </Card.Content>
             </Card>
           </Grid.Column>

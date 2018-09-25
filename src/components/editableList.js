@@ -59,7 +59,7 @@ export default class DataList extends Component {
 		});
 	}
 
-	makeListItem(data, index) {
+	makeListItem(data = {}, index = 1) {
 		let itemBeingEdited = this.state.itemBeingEdited;
 		let isBeingEdited = itemBeingEdited && data.id === itemBeingEdited.id;
 		let content = null;
@@ -92,6 +92,9 @@ export default class DataList extends Component {
 								<Card.Header as="header">
 									{data.name}
 								</Card.Header>
+								<Card.Description>
+									{data.details}
+								</Card.Description>
 							</Card.Content>
 						</Card>
 					</Segment>
@@ -101,10 +104,10 @@ export default class DataList extends Component {
 			content = (
 				<Card.Content>
 					<Card.Header>
-						{data.data.name}
+						{data.name}
 					</Card.Header>
 						<Card.Description>id: {data.id}</Card.Description>
-						<Card.Description>options: {Object.keys(data.options).map(k => `${k} = ${data.options[k]}`).join(', ')}</Card.Description>
+						<Card.Description>options: {data.options ? Object.keys(data.options).map(k => `${k} = ${data.options[k]}`).join(', ') : ''}</Card.Description>
 				</Card.Content>
 			)
 		}
