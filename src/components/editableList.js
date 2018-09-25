@@ -104,9 +104,10 @@ export default class DataList extends Component {
 			content = (
 				<Card.Content>
 					<Card.Header>
-						{data.name}
+						{data.data.name}
 					</Card.Header>
 						<Card.Description>id: {data.id}</Card.Description>
+						<Card.Description>{data.data.details}</Card.Description>
 						<Card.Description>options: {data.options ? Object.keys(data.options).map(k => `${k} = ${data.options[k]}`).join(', ') : ''}</Card.Description>
 				</Card.Content>
 			)

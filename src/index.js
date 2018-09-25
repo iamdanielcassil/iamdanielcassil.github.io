@@ -42,7 +42,7 @@ class App extends Component {
       id: this.nextId++,
       parentId,
       name: `sibling of ${parentId}`,
-      details: 'you can create non saveable transactions to effect client side data until save to mimic actions ',
+      details: 'you can create non saveable transactions to effect client side data until save to mimic actions done on the server / on save',
     } 
 
     this.transactor.add(data.id, data, {save: false, add: true});
@@ -63,7 +63,6 @@ class App extends Component {
 
     this.transactor.add(data.id, data, {add: true});
     console.log('added transaction with data', data)
-    this.createSubRecord(data.id);
     this.setState({
       inputValue: ''
     });
@@ -170,10 +169,7 @@ class App extends Component {
   getListD() {
     return this.transactor.superimpose(this.data2.map(data => {
       return { id: data.id, data }
-    })).map(t => {
-      t.data.options = t.options
-      return t.data;
-    }).filter(t => t.parentId !== undefined);
+    })).filter(t => t.data.parentId !== undefined);
   }
 
   /**
@@ -225,7 +221,7 @@ class App extends Component {
 
     return (
       <div style={{ margin: 20 }}>
-        <Grid container columns={4} divided>
+        <Grid container columns={3} divided>
         <Grid.Row centered textAlign="center">
         <div><Image src="icon.png" size="tiny"/></div>
         </Grid.Row>
@@ -251,7 +247,7 @@ class App extends Component {
           <Grid.Column key="2">
             <Card fluid={true}>
               <Card.Header textAlign="center" style={{ paddingTop: 10, paddingBottom: 10 }}>
-                Transactions - transactor.get()
+                transactor.get()
               </Card.Header>
               <Card.Content>
                 <TList {...{data: listB}} />
@@ -261,14 +257,14 @@ class App extends Component {
           <Grid.Column key="3">
             <Card fluid={true}>
               <Card.Header textAlign="center" style={{ paddingTop: 10, paddingBottom: 10 }}>
-                Data Set 2 with Transactions superimposed
+                transactor.superimpose(clientData)
               </Card.Header>
               <Card.Content>
                 <TList {...{data: listC, editable: true, updateDataItem: this.updateDataItem, deleteDataItem: this.deleteDataItem}} />
               </Card.Content>
             </Card>
           </Grid.Column>
-          <Grid.Column key="4">
+          {/* <Grid.Column key="4">
             <Card fluid={true}>
               <Card.Header textAlign="center" style={{ paddingTop: 10, paddingBottom: 10 }}>
                 Non saveable - system created content
@@ -277,7 +273,7 @@ class App extends Component {
                 <TList {...{data: listD}} />
               </Card.Content>
             </Card>
-          </Grid.Column>
+          </Grid.Column> */}
         </Grid>
       </div>
     );

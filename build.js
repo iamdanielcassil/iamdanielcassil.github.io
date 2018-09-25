@@ -65107,7 +65107,7 @@ function (_Component) {
           }, data.name), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, data.details))));
         }
       } else {
-        content = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, data.name), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, "id: ", data.id), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, "options: ", data.options ? Object.keys(data.options).map(function (k) {
+        content = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Header, null, data.data.name), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, "id: ", data.id), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, data.data.details), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_1__["Card"].Description, null, "options: ", data.options ? Object.keys(data.options).map(function (k) {
           return "".concat(k, " = ").concat(data.options[k]);
         }).join(', ') : ''));
       }
@@ -65218,7 +65218,7 @@ function (_Component) {
         id: this.nextId++,
         parentId: parentId,
         name: "sibling of ".concat(parentId),
-        details: 'you can create non saveable transactions to effect client side data until save to mimic actions '
+        details: 'you can create non saveable transactions to effect client side data until save to mimic actions done on the server / on save'
       };
       this.transactor.add(data.id, data, {
         save: false,
@@ -65244,7 +65244,6 @@ function (_Component) {
         add: true
       });
       console.log('added transaction with data', data);
-      this.createSubRecord(data.id);
       this.setState({
         inputValue: ''
       });
@@ -65392,11 +65391,8 @@ function (_Component) {
           id: data.id,
           data: data
         };
-      })).map(function (t) {
-        t.data.options = t.options;
-        return t.data;
-      }).filter(function (t) {
-        return t.parentId !== undefined;
+      })).filter(function (t) {
+        return t.data.parentId !== undefined;
       });
     }
     /**
@@ -65472,7 +65468,7 @@ function (_Component) {
         }
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"], {
         container: true,
-        columns: 4,
+        columns: 3,
         divided: true
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Row, {
         centered: true,
@@ -65522,7 +65518,7 @@ function (_Component) {
           paddingTop: 10,
           paddingBottom: 10
         }
-      }, "Transactions - transactor.get()"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_editableList__WEBPACK_IMPORTED_MODULE_3__["default"], {
+      }, "transactor.get()"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_editableList__WEBPACK_IMPORTED_MODULE_3__["default"], {
         data: listB
       })))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
         key: "3"
@@ -65534,23 +65530,11 @@ function (_Component) {
           paddingTop: 10,
           paddingBottom: 10
         }
-      }, "Data Set 2 with Transactions superimposed"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_editableList__WEBPACK_IMPORTED_MODULE_3__["default"], {
+      }, "transactor.superimpose(clientData)"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_editableList__WEBPACK_IMPORTED_MODULE_3__["default"], {
         data: listC,
         editable: true,
         updateDataItem: this.updateDataItem,
         deleteDataItem: this.deleteDataItem
-      })))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Grid"].Column, {
-        key: "4"
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"], {
-        fluid: true
-      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Header, {
-        textAlign: "center",
-        style: {
-          paddingTop: 10,
-          paddingBottom: 10
-        }
-      }, "Non saveable - system created content"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Card"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_editableList__WEBPACK_IMPORTED_MODULE_3__["default"], {
-        data: listD
       }))))));
     }
   }]);
