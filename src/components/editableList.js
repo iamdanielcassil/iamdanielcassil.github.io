@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Card, Segment, Input, Header, Label } from 'semantic-ui-react'
+import { Card, Segment, Input, Header, Label } from 'semantic-ui-react';
 
 /**
  * This demo site was quickly thrown together, please forgive the code mess.
@@ -121,10 +121,20 @@ export default class DataList extends Component {
 	}
 
 	render() {
+		let sortable = (
+			<Sortable>
+				{this.props.data.map(this.makeListItem)}
+			</Sortable>
+		);
+		let standard = (
+			<Card>
+				{this.props.data.map(this.makeListItem)}
+			</Card>
+		)
 		return (
 			<div>
 				<Card.Group>
-					{this.props.data.map(this.makeListItem)}
+					{this.props.sortable ? sortable : standard}
 				</Card.Group>
 			</div>
 		);

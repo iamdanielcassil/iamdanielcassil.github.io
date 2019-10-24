@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { Button, Grid, Input, Image, Card, Menu } from 'semantic-ui-react'
-import TList from './components/editableList';
+import DraggableList from './components/draggableList';
 import Transactor from 'sequence-transactor';
 
 /**
@@ -66,6 +66,10 @@ class App extends Component {
     this.setState({
       inputValue: ''
     });
+  }
+
+  updateOrder(data) {
+
   }
 
   /**
@@ -250,7 +254,7 @@ class App extends Component {
                 transactor.get()
               </Card.Header>
               <Card.Content>
-                <TList {...{data: listB}} />
+                <DraggableList key="1" {...{id: '1', data: listB}} />
               </Card.Content>
             </Card>
           </Grid.Column>
@@ -260,7 +264,7 @@ class App extends Component {
                 transactor.superimpose(clientData)
               </Card.Header>
               <Card.Content>
-                <TList {...{data: listC, editable: true, updateDataItem: this.updateDataItem, deleteDataItem: this.deleteDataItem}} />
+                <DraggableList key="2" {...{id: '2', data: listC, updateDataItem: this.updateDataItem, deleteDataItem: this.deleteDataItem}} />
               </Card.Content>
             </Card>
           </Grid.Column>
