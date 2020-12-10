@@ -77124,13 +77124,15 @@ function (_React$Component) {
         return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", _extends({
           ref: provided.innerRef,
           style: {
-            backgroundColor: snapshot.isDraggingOver ? 'blue' : 'grey'
+            backgroundColor: snapshot.isDraggingOver ? "blue" : "grey"
           }
         }, provided.droppableProps), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("h2", null, "I am a droppable!"), provided.placeholder, _this2.props.data.map(function (item, index) {
-          return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_draggableItem__WEBPACK_IMPORTED_MODULE_2__["default"], {
+          return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_draggableItem__WEBPACK_IMPORTED_MODULE_2__["default"], _extends({
+            key: index
+          }, {
             item: item,
             index: index
-          });
+          }));
         }));
       }));
     }
