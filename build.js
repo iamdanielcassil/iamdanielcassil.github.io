@@ -77118,6 +77118,7 @@ function (_React$Component) {
         onDragUpdate: this.onDragUpdate,
         onDragEnd: this.onDragEnd
       }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_beautiful_dnd__WEBPACK_IMPORTED_MODULE_0__["Droppable"], {
+        key: this.props.id,
         droppableId: this.props.id,
         type: "PERSON"
       }, function (provided, snapshot) {

@@ -22,7 +22,11 @@ export default class App extends React.Component {
         onDragUpdate={this.onDragUpdate}
         onDragEnd={this.onDragEnd}
       >
-        <Droppable droppableId={this.props.id} type="PERSON">
+        <Droppable
+          key={this.props.id}
+          droppableId={this.props.id}
+          type="PERSON"
+        >
           {(provided, snapshot) => (
             <div
               ref={provided.innerRef}
