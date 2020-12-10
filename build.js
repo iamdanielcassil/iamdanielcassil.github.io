@@ -77129,7 +77129,7 @@ function (_React$Component) {
           }
         }, provided.droppableProps), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("h2", null, "I am a droppable!"), provided.placeholder, _this2.props.data.map(function (item, index) {
           return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_draggableItem__WEBPACK_IMPORTED_MODULE_2__["default"], _extends({
-            key: index
+            key: item.id
           }, {
             item: item,
             index: index

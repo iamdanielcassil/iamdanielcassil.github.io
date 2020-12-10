@@ -39,7 +39,7 @@ export default class App extends React.Component {
               {provided.placeholder}
               {this.props.data.map((item, index) => (
                 <DraggableListItem
-                  key={index}
+                  key={item.id}
                   {...{ item, index }}
                 ></DraggableListItem>
               ))}
